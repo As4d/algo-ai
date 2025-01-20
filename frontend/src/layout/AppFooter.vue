@@ -1,7 +1,6 @@
 <script setup></script>
 
 <template>
-    <router-view />
+    <div class="layout-footer">
+    </div>
 </template>
-
-<style scoped></style>
