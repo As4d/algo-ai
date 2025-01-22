@@ -1,10 +1,3 @@
-<script setup>
-import { useLayout } from '@/layout/composables/layout';
-import AppConfigurator from './AppConfigurator.vue';
-
-const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
-</script>
-
 <template>
     <div class="layout-topbar">
         <div class="layout-topbar-logo-container">
@@ -12,7 +5,6 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
                 <i class="pi pi-bars"></i>
             </button>
             <router-link to="/" class="layout-topbar-logo">
-
                 <span>AlgoAI</span>
             </router-link>
         </div>
@@ -43,6 +35,7 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
 
             <div class="layout-topbar-menu hidden lg:block">
                 <div class="layout-topbar-menu-content">
+                    <!--
                     <button type="button" class="layout-topbar-action">
                         <i class="pi pi-calendar"></i>
                         <span>Calendar</span>
@@ -51,12 +44,36 @@ const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
                         <i class="pi pi-inbox"></i>
                         <span>Messages</span>
                     </button>
-                    <button type="button" class="layout-topbar-action">
-                        <i class="pi pi-user"></i>
-                        <span>Profile</span>
-                    </button>
+                    -->
+                    <template v-if="isAuthenticated()">
+                        <router-link to="/profile" class="layout-topbar-action">
+                            <i class="pi pi-user"></i>
+                            <span>Profile</span>
+                        </router-link>
+                    </template>
+                    <template v-if="isAuthenticated()">
+                        <router-link to="/auth/logout" class="layout-topbar-action">
+                            <i class="pi pi-sign-out"></i>
+                            <span>Logout</span>
+                        </router-link>
+                    </template>
+                    <template v-if="!isAuthenticated()">
+                        <router-link to="/auth/login" class="layout-topbar-action">
+                            <i class="pi pi-sign-in"></i>
+                            <span>Login</span>
+                        </router-link>
+                    </template>
                 </div>
             </div>
         </div>
     </div>
 </template>
+
+<script setup>
+import { useLayout } from '@/layout/composables/layout';
+import AppConfigurator from './AppConfigurator.vue';
+
+const { toggleMenu, toggleDarkMode, isDarkTheme } = useLayout();
+
+import { isAuthenticated } from '@/router/guards';
+</script>
