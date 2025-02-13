@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'accounts',
+    'problems',
 ]
 
 CORS_ALLOW_CREDENTIALS = True

@@ -8,6 +8,14 @@ const model = ref([
         label: 'Home',
         items: [{ label: 'Dashboard', icon: 'pi pi-fw pi-home', to: '/' }]
     },
+    {
+        label: 'Code',
+        items: [
+            // add items like "problem sets", "learn code basics", etc.
+            { label: 'Problem Sets', icon: 'pi pi-fw pi-pencil', to: '/problem-sets' },
+            { label: 'Learn Code Basics', icon: 'pi pi-fw pi-book', to: '/learn-code-basics' }
+        ]
+    }
     
 ]);
 </script>
