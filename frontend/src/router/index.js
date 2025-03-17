@@ -2,7 +2,7 @@ import AppLayout from '@/layout/AppLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 // import require auth
 import { requireAuth } from '@/router/guards';
-import CodespaceLayout from '@/layout/CodespaceLayout.vue';
+import CodeLayout from '@/codeLayout/CodeLayout.vue';
 
 const router = createRouter({
     history: createWebHistory(),
@@ -63,10 +63,13 @@ const router = createRouter({
             ]
         },
         {
-            path: '/:pathMatch(.*)*',
-            name: 'notfound',
-            component: () => import('@/views/pages/NotFound.vue')
-        }
+            path: '/problems/:id',
+            component: CodeLayout,
+            beforeEnter: requireAuth,
+            children: [
+
+            ]
+        },
     ]
 });
 
