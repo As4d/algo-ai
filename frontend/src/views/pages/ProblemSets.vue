@@ -38,8 +38,9 @@ const fetchProblems = async () => {
 };
 
 const viewProblem = (problemId) => {
-    router.push(`/problems/${problemId}`);
+    router.push({ path: `/problems/${problemId}` });
 };
+
 
 const getStatusClass = (status) => {
     switch (status) {
