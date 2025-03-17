@@ -17,8 +17,7 @@ class Problem(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
 
     def get_markdown_description(self):
-        pass
-        ## TODO: Return the description field as HTML
+        return self.description
 
     def __str__(self):
         return self.name

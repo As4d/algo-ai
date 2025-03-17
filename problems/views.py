@@ -55,3 +55,19 @@ def update_status(request, problem_id):
 
     user_progress.save()
     return JsonResponse({"message": "Status updated successfully"})
+
+@require_http_methods(["GET"])
+def get_question_description(request, problem_id):
+    """
+    Returns the description of a specific problem.
+    """
+    problem = get_object_or_404(Problem, id=problem_id)
+    return JsonResponse({"description": problem.get_markdown_description()})
+
+@require_http_methods(["GET"])
+def get_question_boilerplate(request, problem_id):
+    """
+    Returns the boilerplate code for a specific problem.
+    """
+    problem = get_object_or_404(Problem, id=problem_id)
+    return JsonResponse({"boilerplate": problem.boilerplate_code})
