@@ -45,6 +45,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'accounts',
     'problems',
+    'ai_chat',
+    'code_execution',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
