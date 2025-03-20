@@ -63,6 +63,18 @@ const router = createRouter({
             ]
         },
         {
+            path: '/learn-python-basics',
+            component: AppLayout,
+            beforeEnter: requireAuth,
+            children: [
+                {
+                    path: '',
+                    name: 'learnPythonBasics',
+                    component: () => import('@/views/pages/LearnPythonBasics.vue')
+                }
+            ]
+        },
+        {
             path: '/problems/:id',
             component: CodeLayout,
             beforeEnter: requireAuth,

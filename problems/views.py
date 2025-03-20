@@ -10,8 +10,12 @@ from .models import Problem, UserProgress
 def get_problems(request):
     """
     Returns a list of all problems with their metadata.
+    Optional query parameter 'type' to filter by problem type.
     """
-    problems = Problem.objects.all().values('id', 'name', 'language', 'difficulty')
+    problem_type = request.GET.get('type', 'problem_set')
+    problems = Problem.objects.filter(problem_type=problem_type).values(
+        'id', 'name', 'language', 'difficulty', 'problem_type', 'order'
+    )
     return JsonResponse(list(problems), safe=False)
 
 @require_http_methods(["GET"])
@@ -27,10 +31,12 @@ def get_problem_details(request, problem_id):
         "name": problem.name,
         "language": problem.language,
         "difficulty": problem.difficulty,
+        "problem_type": problem.problem_type,
         "description": problem.get_markdown_description(),
         "test_cases": problem.test_cases,
         "status": user_progress.status,
-        "completion_time": user_progress.completion_time
+        "completion_time": user_progress.completion_time,
+        "order": problem.order
     })
 
 @require_http_methods(["POST"])
