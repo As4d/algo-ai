@@ -19,7 +19,8 @@
             <div class="bg-gray-100 dark:bg-gray-800 border-t">
                 <div class="p-2">
                     <h2 class="text-md font-semibold mb-2">Output</h2>
-                    <pre class="bg-gray-200 dark:bg-gray-900 p-3 rounded-md whitespace-pre-wrap h-32 overflow-y-auto font-mono text-sm">{{ output }}</pre>
+                    <pre
+                        class="bg-gray-200 dark:bg-gray-900 p-3 rounded-md whitespace-pre-wrap h-32 overflow-y-auto font-mono text-sm">{{ output }}</pre>
                 </div>
             </div>
         </div>
@@ -233,7 +234,7 @@ export default {
                     body: JSON.stringify({
                         question: this.questionMarkdown,
                         code: this.code,
-                        output: this.output  // Now sending terminal output
+                        terminal: this.output  // Changed from output to terminal to match API
                     })
                 });
 
