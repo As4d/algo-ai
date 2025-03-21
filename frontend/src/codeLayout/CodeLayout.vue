@@ -1,14 +1,14 @@
 <template>
     <div class="grid grid-cols-12 h-screen">
         <!-- Left Panel: Markdown Question -->
-        <div class="col-span-3 bg-gray-100 dark:bg-gray-800 p-6 overflow-auto border-r">
+        <div class="col-span-3 bg-gray-100 dark:bg-gray-800 p-6 overflow-auto">
             <div class="markdown-content">
                 <div v-html="compiledMarkdown"></div>
             </div>
         </div>
 
         <!-- Middle Panel: Python Code Editor -->
-        <div class="col-span-6 flex flex-col border rounded-lg overflow-hidden h-full">
+        <div class="col-span-6 flex flex-col overflow-hidden h-full">
             <div class="p-2 bg-gray-200 dark:bg-gray-900 flex justify-between items-center">
                 <span class="text-lg font-semibold">Python Code Editor</span>
                 <div class="flex gap-2">
@@ -21,33 +21,37 @@
                 </div>
             </div>
             <div ref="editorContainer" class="flex-1 min-h-0 overflow-hidden"></div>
-            <div class="bg-gray-100 dark:bg-gray-800 border-t">
+            <div class="bg-gray-100 dark:bg-gray-800">
                 <div class="p-2">
-                    <h2 class="text-md font-semibold mb-2">Output</h2>
-                    <pre
-                        class="bg-gray-200 dark:bg-gray-900 p-3 rounded-md whitespace-pre-wrap h-32 overflow-y-auto font-mono text-sm">{{ output }}</pre>
-                    
+                    <!-- Output Section - Only show when not displaying test results -->
+                    <div v-if="testResults.length === 0">
+                        <h2 class="text-md font-semibold mb-2">Output</h2>
+                        <pre class="bg-gray-200 dark:bg-gray-900 p-3 rounded-md whitespace-pre-wrap h-32 overflow-y-auto font-mono text-sm">{{ output }}</pre>
+                    </div>
+
                     <!-- Test Results Section -->
-                    <div v-if="testResults.length > 0" class="mt-4">
+                    <div v-if="testResults.length > 0">
                         <h2 class="text-md font-semibold mb-2">Test Results</h2>
-                        <div v-for="(result, index) in testResults" :key="index" class="mb-2 p-2 rounded-md" 
-                             :class="result.passed ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'">
-                            <div class="flex justify-between items-center">
-                                <span class="font-medium">Test {{ index + 1 }}: {{ result.test_name }}</span>
-                                <span :class="result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
-                                    {{ result.passed ? 'Passed' : 'Failed' }}
-                                </span>
-                            </div>
-                            <div v-if="!result.passed" class="mt-2 text-sm">
-                                <div v-if="result.error" class="text-red-600 dark:text-red-400 whitespace-pre-wrap font-mono">{{ result.error }}</div>
-                                <div v-else>
-                                    <div class="mb-1">
-                                        <span class="font-medium">Expected:</span>
-                                        <pre class="bg-gray-200 dark:bg-gray-700 p-1 mt-1 rounded">{{ result.expected_output }}</pre>
-                                    </div>
-                                    <div>
-                                        <span class="font-medium">Got:</span>
-                                        <pre class="bg-gray-200 dark:bg-gray-700 p-1 mt-1 rounded">{{ result.actual_output }}</pre>
+                        <div class="max-h-[300px] overflow-y-auto">
+                            <div v-for="(result, index) in testResults" :key="index" class="mb-2 p-2 rounded-md" 
+                                 :class="result.passed ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'">
+                                <div class="flex justify-between items-center">
+                                    <span class="font-medium">Test {{ index + 1 }}: {{ result.test_name }}</span>
+                                    <span :class="result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                        {{ result.passed ? 'Passed' : 'Failed' }}
+                                    </span>
+                                </div>
+                                <div v-if="!result.passed" class="mt-2 text-sm">
+                                    <div v-if="result.error" class="text-red-600 dark:text-red-400 whitespace-pre-wrap font-mono">{{ result.error }}</div>
+                                    <div v-else>
+                                        <div class="mb-1">
+                                            <span class="font-medium">Expected:</span>
+                                            <pre class="bg-gray-200 dark:bg-gray-700 p-1 mt-1 rounded">{{ result.expected_output }}</pre>
+                                        </div>
+                                        <div>
+                                            <span class="font-medium">Got:</span>
+                                            <pre class="bg-gray-200 dark:bg-gray-700 p-1 mt-1 rounded">{{ result.actual_output }}</pre>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -58,7 +62,7 @@
         </div>
 
         <!-- Right Panel: AI Assistant -->
-        <div class="col-span-3 flex flex-col border rounded-lg overflow-hidden">
+        <div class="col-span-3 flex flex-col overflow-hidden">
             <div class="p-2 bg-gray-200 dark:bg-gray-900 flex justify-between items-center">
                 <span class="text-lg font-semibold">AI Assistant</span>
                 <button @click="getHint" class="bg-green-500 text-white px-4 py-2 rounded-lg">
@@ -231,7 +235,7 @@ export default {
             const apiUrl = "http://localhost:8000/code_execution";
             const problemId = this.$route.params.id;
 
-            this.output = "Running...";  // Show a loading message
+            this.output = runTests ? "" : "Running...";  // Only show loading message for normal runs
             this.testResults = [];  // Clear previous test results
 
             try {
@@ -255,16 +259,13 @@ export default {
                 if (runTests) {
                     // Handle test results
                     this.testResults = data.test_results || [];
-                    this.output = data.all_tests_passed ? 
-                        "All tests passed! 🎉" : 
-                        "Some tests failed. Check the results below.";
                 } else {
                     // Handle normal execution output
                     this.output = data.output || "No output.";
                 }
             } catch (error) {
                 console.error("Failed to execute code:", error);
-                this.output = "Execution failed: " + error.message;
+                this.output = runTests ? "" : "Execution failed: " + error.message;
             }
         },
 
