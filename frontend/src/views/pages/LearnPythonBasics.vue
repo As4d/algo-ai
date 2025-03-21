@@ -71,6 +71,8 @@ onBeforeMount(fetchProblems);
             filterDisplay="menu"
             showGridlines
             class="shadow-md rounded-lg"
+            @row-click="(e) => viewProblem(e.data.id)"
+            :rowClass="() => 'cursor-pointer'"
         >
             <template #header>
                 <div class="flex justify-between items-center">
@@ -81,7 +83,7 @@ onBeforeMount(fetchProblems);
 
             <Column field="name" header="Lesson Name" style="min-width: 14rem" :sortable="true">
                 <template #body="{ data }">
-                    <span class="text-primary font-semibold hover:underline cursor-pointer" @click="viewProblem(data.id)">
+                    <span class="text-primary font-semibold">
                         {{ data.name }}
                     </span>
                 </template>
@@ -127,5 +129,12 @@ onBeforeMount(fetchProblems);
 </template>
 
 <style scoped>
-/* Custom styles if needed */
+/* Add hover effect for the entire row */
+:deep(.p-datatable .p-datatable-tbody > tr) {
+    transition: background-color 0.2s;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr:hover) {
+    background-color: var(--surface-hover) !important;
+}
 </style> 
