@@ -11,9 +11,14 @@
         <div class="col-span-6 flex flex-col border rounded-lg overflow-hidden h-full">
             <div class="p-2 bg-gray-200 dark:bg-gray-900 flex justify-between items-center">
                 <span class="text-lg font-semibold">Python Code Editor</span>
-                <button @click="runCode" class="bg-blue-500 text-white px-4 py-2 rounded-lg">
-                    Run Code
-                </button>
+                <div class="flex gap-2">
+                    <button @click="runCode(false)" class="bg-blue-500 text-white px-4 py-2 rounded-lg">
+                        Run Code
+                    </button>
+                    <button @click="runCode(true)" class="bg-green-500 text-white px-4 py-2 rounded-lg">
+                        Run Tests
+                    </button>
+                </div>
             </div>
             <div ref="editorContainer" class="flex-1 min-h-0 overflow-hidden"></div>
             <div class="bg-gray-100 dark:bg-gray-800 border-t">
@@ -21,6 +26,33 @@
                     <h2 class="text-md font-semibold mb-2">Output</h2>
                     <pre
                         class="bg-gray-200 dark:bg-gray-900 p-3 rounded-md whitespace-pre-wrap h-32 overflow-y-auto font-mono text-sm">{{ output }}</pre>
+                    
+                    <!-- Test Results Section -->
+                    <div v-if="testResults.length > 0" class="mt-4">
+                        <h2 class="text-md font-semibold mb-2">Test Results</h2>
+                        <div v-for="(result, index) in testResults" :key="index" class="mb-2 p-2 rounded-md" 
+                             :class="result.passed ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'">
+                            <div class="flex justify-between items-center">
+                                <span class="font-medium">Test {{ index + 1 }}: {{ result.test_name }}</span>
+                                <span :class="result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
+                                    {{ result.passed ? 'Passed' : 'Failed' }}
+                                </span>
+                            </div>
+                            <div v-if="!result.passed" class="mt-2 text-sm">
+                                <div v-if="result.error" class="text-red-600 dark:text-red-400 whitespace-pre-wrap font-mono">{{ result.error }}</div>
+                                <div v-else>
+                                    <div class="mb-1">
+                                        <span class="font-medium">Expected:</span>
+                                        <pre class="bg-gray-200 dark:bg-gray-700 p-1 mt-1 rounded">{{ result.expected_output }}</pre>
+                                    </div>
+                                    <div>
+                                        <span class="font-medium">Got:</span>
+                                        <pre class="bg-gray-200 dark:bg-gray-700 p-1 mt-1 rounded">{{ result.actual_output }}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -59,7 +91,8 @@ export default {
             code: ``,
             output: "Click 'Run Code' to see output",
             aiHint: "Click 'Get Hint' for AI assistance...",
-            editorView: null
+            editorView: null,
+            testResults: []
         };
     },
     computed: {
@@ -111,7 +144,7 @@ export default {
 
             this.editorView = new EditorView({
                 state: EditorState.create({
-                    doc: this.code || '',  // Use existing code or empty string
+                    doc: this.code || '',
                     extensions: [
                         basicSetup,
                         python(),
@@ -194,10 +227,12 @@ export default {
             }
         },
 
-        async runCode() {
+        async runCode(runTests = false) {
             const apiUrl = "http://localhost:8000/code_execution";
+            const problemId = this.$route.params.id;
 
             this.output = "Running...";  // Show a loading message
+            this.testResults = [];  // Clear previous test results
 
             try {
                 const response = await fetch(`${apiUrl}/execute/`, {
@@ -206,16 +241,30 @@ export default {
                         'Content-Type': 'application/json',
                         'Accept': 'application/json'
                     },
-                    body: JSON.stringify({ code: this.code })
+                    body: JSON.stringify({
+                        code: this.code,
+                        problem_id: problemId,
+                        run_tests: runTests
+                    })
                 });
 
                 if (!response.ok) throw new Error(`Execution error: ${response.status}`);
 
                 const data = await response.json();
-                this.output = data.output || "No output.";
+                
+                if (runTests) {
+                    // Handle test results
+                    this.testResults = data.test_results || [];
+                    this.output = data.all_tests_passed ? 
+                        "All tests passed! 🎉" : 
+                        "Some tests failed. Check the results below.";
+                } else {
+                    // Handle normal execution output
+                    this.output = data.output || "No output.";
+                }
             } catch (error) {
                 console.error("Failed to execute code:", error);
-                this.output = "Execution failed.";
+                this.output = "Execution failed: " + error.message;
             }
         },
 
@@ -234,14 +283,13 @@ export default {
                     body: JSON.stringify({
                         question: this.questionMarkdown,
                         code: this.code,
-                        terminal: this.output  // Changed from output to terminal to match API
+                        terminal: this.output
                     })
                 });
 
                 if (!response.ok) throw new Error(`AI Hint error: ${response.status}`);
 
                 const data = await response.json();
-                console.log(data);
                 this.aiHint = data.response || "No hint available.";
             } catch (error) {
                 console.error("Failed to fetch AI hint:", error);
