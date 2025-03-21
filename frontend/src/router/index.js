@@ -1,7 +1,7 @@
 import AppLayout from '@/layout/AppLayout.vue';
 import { createRouter, createWebHistory } from 'vue-router';
 // import require auth
-import { requireAuth } from '@/router/guards';
+import { requireAuth, redirectIfAuthenticated } from '@/router/guards';
 import CodeLayout from '@/codeLayout/CodeLayout.vue';
 
 const router = createRouter({
@@ -16,7 +16,8 @@ const router = createRouter({
         {
             path: '/auth/login',
             name: 'login',
-            component: () => import('@/views/pages/auth/Login.vue')
+            component: () => import('@/views/pages/auth/Login.vue'),
+            beforeEnter: redirectIfAuthenticated
         },
         {
             path: '/auth/logout',

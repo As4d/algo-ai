@@ -10,6 +10,15 @@ export function requireAuth(to, from, next) {
     }
 }
 
+export function redirectIfAuthenticated(to, from, next) {
+    const authStore = useAuthStore();
+
+    if (authStore.isAuthenticated) {
+        next({ name: 'home' }); // Redirect to home if already logged in
+    } else {
+        next(); // Allow access to login page if not logged in
+    }
+}
 
 export function isAuthenticated() {
     const authStore = useAuthStore();
