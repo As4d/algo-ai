@@ -58,7 +58,7 @@ export default {
                 if (response.ok) {
                     this.success = 'Registration successful! Please log in.';
                     setTimeout(() => {
-                        this.$router.push('auth/login');
+                        this.$router.push('login');
                     }, 1000);
                 } else {
                     this.error = data.error || 'Registration failed';
