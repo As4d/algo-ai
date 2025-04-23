@@ -12,12 +12,8 @@
             <div class="p-2 bg-gray-200 dark:bg-gray-900 flex justify-between items-center">
                 <span class="text-lg font-semibold">Python Code Editor</span>
                 <div class="flex gap-2">
-                    <button @click="runCode(false)" class="bg-blue-500 text-white px-4 py-2 rounded-lg">
-                        Run Code
-                    </button>
-                    <button @click="runCode(true)" class="bg-green-500 text-white px-4 py-2 rounded-lg">
-                        Run Tests
-                    </button>
+                    <button @click="runCode(false)" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Run Code</button>
+                    <button @click="runCode(true)" class="bg-green-500 text-white px-4 py-2 rounded-lg">Run Tests</button>
                 </div>
             </div>
             <div ref="editorContainer" class="flex-1 min-h-0 overflow-hidden"></div>
@@ -33,8 +29,7 @@
                     <div v-if="testResults.length > 0">
                         <h2 class="text-md font-semibold mb-2">Test Results</h2>
                         <div class="max-h-[300px] overflow-y-auto">
-                            <div v-for="(result, index) in testResults" :key="index" class="mb-2 p-2 rounded-md" 
-                                 :class="result.passed ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'">
+                            <div v-for="(result, index) in testResults" :key="index" class="mb-2 p-2 rounded-md" :class="result.passed ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'">
                                 <div class="flex justify-between items-center">
                                     <span class="font-medium">Test {{ index + 1 }}: {{ result.test_name }}</span>
                                     <span :class="result.passed ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'">
@@ -65,9 +60,7 @@
         <div class="col-span-3 flex flex-col overflow-hidden">
             <div class="p-2 bg-gray-200 dark:bg-gray-900 flex justify-between items-center">
                 <span class="text-lg font-semibold">AI Assistant</span>
-                <button @click="getHint" class="bg-green-500 text-white px-4 py-2 rounded-lg">
-                    Get Hint
-                </button>
+                <button @click="getHint" class="bg-green-500 text-white px-4 py-2 rounded-lg">Get Hint</button>
             </div>
             <div class="flex-1 p-4 bg-gray-100 dark:bg-gray-800 overflow-y-auto">
                 <h2 class="text-md font-semibold mb-3">Hint</h2>
@@ -155,15 +148,15 @@ export default {
                         oneDark,
                         updateListener,
                         EditorView.theme({
-                            "&": {
-                                height: "100%",
-                                minHeight: "100px"
+                            '&': {
+                                height: '100%',
+                                minHeight: '100px'
                             },
-                            ".cm-scroller": {
-                                lineHeight: "1.6"
+                            '.cm-scroller': {
+                                lineHeight: '1.6'
                             },
-                            ".cm-content": {
-                                padding: "10px 0"
+                            '.cm-content': {
+                                padding: '10px 0'
                             }
                         })
                     ]
@@ -187,7 +180,7 @@ export default {
 
         async fetchQuestionMarkdown() {
             const problemId = this.$route.params.id;
-            const apiUrl = "http://localhost:8000";
+            const apiUrl = 'http://localhost:8000';
 
             try {
                 const response = await fetch(`${apiUrl}/problems/${problemId}/get_question_description/`, {
@@ -207,7 +200,7 @@ export default {
 
         async fetchQuestionBoilerplate() {
             const problemId = this.$route.params.id;
-            const apiUrl = "http://localhost:8000";
+            const apiUrl = 'http://localhost:8000';
 
             try {
                 const response = await fetch(`${apiUrl}/problems/${problemId}/get_question_boilerplate/`, {
@@ -232,18 +225,18 @@ export default {
         },
 
         async runCode(runTests = false) {
-            const apiUrl = "http://localhost:8000/code_execution";
+            const apiUrl = 'http://localhost:8000/code_execution';
             const problemId = this.$route.params.id;
 
-            this.output = runTests ? "" : "Running...";  // Only show loading message for normal runs
-            this.testResults = [];  // Clear previous test results
+            this.output = runTests ? '' : 'Running...'; // Only show loading message for normal runs
+            this.testResults = []; // Clear previous test results
 
             try {
                 const response = await fetch(`${apiUrl}/execute/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        Accept: 'application/json'
                     },
                     body: JSON.stringify({
                         code: this.code,
@@ -255,31 +248,31 @@ export default {
                 if (!response.ok) throw new Error(`Execution error: ${response.status}`);
 
                 const data = await response.json();
-                
+
                 if (runTests) {
                     // Handle test results
                     this.testResults = data.test_results || [];
                 } else {
                     // Handle normal execution output
-                    this.output = data.output || "No output.";
+                    this.output = data.output || 'No output.';
                 }
             } catch (error) {
-                console.error("Failed to execute code:", error);
-                this.output = runTests ? "" : "Execution failed: " + error.message;
+                console.error('Failed to execute code:', error);
+                this.output = runTests ? '' : 'Execution failed: ' + error.message;
             }
         },
 
         async getHint() {
-            const apiUrl = "http://localhost:8000/ai_chat";
+            const apiUrl = 'http://localhost:8000/ai_chat';
 
-            this.aiHint = "Generating hint...";  // Show loading state
+            this.aiHint = 'Generating hint...'; // Show loading state
 
             try {
                 const response = await fetch(`${apiUrl}/chat/`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'Accept': 'application/json'
+                        Accept: 'application/json'
                     },
                     body: JSON.stringify({
                         question: this.questionMarkdown,
@@ -291,10 +284,10 @@ export default {
                 if (!response.ok) throw new Error(`AI Hint error: ${response.status}`);
 
                 const data = await response.json();
-                this.aiHint = data.response || "No hint available.";
+                this.aiHint = data.response || 'No hint available.';
             } catch (error) {
-                console.error("Failed to fetch AI hint:", error);
-                this.aiHint = "Hint generation failed.";
+                console.error('Failed to fetch AI hint:', error);
+                this.aiHint = 'Hint generation failed.';
             }
         }
     }

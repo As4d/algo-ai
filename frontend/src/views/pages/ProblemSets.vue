@@ -21,7 +21,7 @@ const statuses = reactive(['not_started', 'started', 'completed']);
 
 const fetchProblems = async () => {
     try {
-        const response = await fetch('http://localhost:8000/problems/list/', {
+        const response = await fetch('http://localhost:8000/problems/list/?type=problem_set', {
             method: 'GET',
             headers: { 'Accept': 'application/json' },
             credentials: 'include'
