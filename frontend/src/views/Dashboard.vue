@@ -15,7 +15,7 @@ import StatsWidget from '@/components/dashboard/StatsWidget.vue';
         </div>
 
         <div class="col-span-12 xl:col-span-6">
-            
+            <LeaderboardWidget />
         </div>
     </div>
 </template>
