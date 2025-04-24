@@ -7,7 +7,7 @@ class Problem(models.Model):
     language = models.CharField(max_length=50)
     difficulty = models.CharField(max_length=10)
     description = models.TextField()  
-    test_cases = models.TextField()  
+    test_cases = models.JSONField()
     boilerplate_code = models.TextField()  
     created_at = models.DateField(auto_now_add=True)
     problem_type = models.CharField(max_length=50)

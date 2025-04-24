@@ -183,7 +183,7 @@ export default {
             const apiUrl = 'http://localhost:8000';
 
             try {
-                const response = await fetch(`${apiUrl}/problems/${problemId}/get_question_description/`, {
+                const response = await fetch(`${apiUrl}/problems/${problemId}/description/`, {
                     method: 'GET',
                     headers: { Accept: 'application/json' }
                 });
@@ -203,7 +203,7 @@ export default {
             const apiUrl = 'http://localhost:8000';
 
             try {
-                const response = await fetch(`${apiUrl}/problems/${problemId}/get_question_boilerplate/`, {
+                const response = await fetch(`${apiUrl}/problems/${problemId}/boilerplate/`, {
                     method: 'GET',
                     headers: { Accept: 'application/json' }
                 });

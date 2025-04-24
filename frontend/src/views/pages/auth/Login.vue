@@ -24,6 +24,10 @@
                             <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
                         </div>
                         <Button label="Sign In" class="w-full" @click="login"></Button>
+                        <div class="text-center mt-4">
+                            <span class="text-muted-color">Don't have an account? </span>
+                            <router-link to="/auth/register" class="font-medium no-underline text-primary cursor-pointer">Register</router-link>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -33,12 +37,15 @@
 
 <script>
 import { useAuthStore } from '@/store/auth';
+import { useRouter } from 'vue-router';
 
 export default {
     setup() {
         const authStore = useAuthStore();
+        const router = useRouter();
         return {
-            authStore
+            authStore,
+            router
         };
     },
     data() {
