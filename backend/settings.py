@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'problems',
     'ai_chat',
     'code_execution',
+    'gamification',
 ]
 
 CORS_ALLOW_CREDENTIALS = True
