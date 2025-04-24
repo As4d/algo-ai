@@ -7,4 +7,5 @@ urlpatterns = [
     path('problems/', include('problems.urls')),
     path('ai_chat/', include('ai_chat.urls')),
     path('code_execution/', include('code_execution.urls')),
+    path('gamification/', include('gamification.urls')),
 ]

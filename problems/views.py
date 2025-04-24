@@ -4,7 +4,7 @@ from django.views.decorators.http import require_http_methods
 from django.contrib.auth.decorators import login_required
 import json
 
-from .models import Problem, UserProgress
+from .models import Problem, UserProgress, Submission
 
 @require_http_methods(["GET"])
 def get_problems(request):
@@ -25,42 +25,73 @@ def get_problem_details(request, problem_id):
     Returns full details of a specific problem, including markdown description and test cases.
     """
     problem = get_object_or_404(Problem, id=problem_id)
-    user_progress, _ = UserProgress.objects.get_or_create(user=request.user, problem=problem)
+    user_progress, _ = UserProgress.objects.get_or_create(
+        user=request.user, 
+        problem=problem,
+        defaults={
+            'is_completed': False,
+            'time_spent': 0,
+            'attempts': 0
+        }
+    )
 
     return JsonResponse({
         "name": problem.name,
         "language": problem.language,
         "difficulty": problem.difficulty,
         "problem_type": problem.problem_type,
-        "description": problem.get_markdown_description(),
+        "description": problem.description,
         "test_cases": problem.test_cases,
-        "status": user_progress.status,
-        "completion_time": user_progress.completion_time,
+        "is_completed": user_progress.is_completed,
+        "time_spent": user_progress.time_spent,
+        "attempts": user_progress.attempts,
         "order": problem.order
     })
 
 @require_http_methods(["POST"])
 @login_required
-def update_status(request, problem_id):
+def update_progress(request, problem_id):
     """
     Updates user progress on a problem.
     """
     data = json.loads(request.body.decode('utf-8'))
-    status = data.get("status")
-    completion_time = data.get("completion_time", None)
-
-    if status not in ["started", "completed"]:
-        return JsonResponse({"error": "Invalid status"}, status=400)
+    is_completed = data.get("is_completed", False)
+    time_spent = data.get("time_spent", 0)
+    code = data.get("code", "")
+    language = data.get("language", "")
 
     problem = get_object_or_404(Problem, id=problem_id)
-    user_progress, _ = UserProgress.objects.get_or_create(user=request.user, problem=problem)
-    user_progress.status = status
+    user_progress, created = UserProgress.objects.get_or_create(
+        user=request.user,
+        problem=problem,
+        defaults={
+            'is_completed': False,
+            'time_spent': 0,
+            'attempts': 0
+        }
+    )
 
-    if status == "completed" and completion_time is not None:
-        user_progress.completion_time = completion_time
+    # Update progress
+    if not created:
+        user_progress.attempts += 1
+        if time_spent > 0:
+            user_progress.time_spent = time_spent
+        user_progress.is_completed = is_completed
+        user_progress.save()
 
-    user_progress.save()
-    return JsonResponse({"message": "Status updated successfully"})
+    # Create submission record
+    submission = Submission.objects.create(
+        user=request.user,
+        problem=problem,
+        code_submitted=code,
+        status='completed' if is_completed else 'attempted',
+        language=language
+    )
+
+    return JsonResponse({
+        "message": "Progress updated successfully",
+        "submission_id": submission.id
+    })
 
 @require_http_methods(["GET"])
 def get_question_description(request, problem_id):
@@ -68,7 +99,7 @@ def get_question_description(request, problem_id):
     Returns the description of a specific problem.
     """
     problem = get_object_or_404(Problem, id=problem_id)
-    return JsonResponse({"description": problem.get_markdown_description()})
+    return JsonResponse({"description": problem.description})
 
 @require_http_methods(["GET"])
 def get_question_boilerplate(request, problem_id):
@@ -77,3 +108,15 @@ def get_question_boilerplate(request, problem_id):
     """
     problem = get_object_or_404(Problem, id=problem_id)
     return JsonResponse({"boilerplate": problem.boilerplate_code})
+
+@require_http_methods(["GET"])
+@login_required
+def get_submissions(request, problem_id):
+    """
+    Returns all submissions for a specific problem by the current user.
+    """
+    submissions = Submission.objects.filter(
+        user=request.user,
+        problem_id=problem_id
+    ).values('id', 'status', 'language', 'created_at', 'code_submitted')
+    return JsonResponse(list(submissions), safe=False)
