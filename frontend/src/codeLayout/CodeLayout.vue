@@ -89,7 +89,9 @@ export default {
             output: "Click 'Run Code' to see output",
             aiHint: "Click 'Get Hint' for AI assistance...",
             editorView: null,
-            testResults: []
+            testResults: [],
+            startTime: null,
+            timeSpent: 0
         };
     },
     computed: {
@@ -122,6 +124,7 @@ export default {
         this.fetchQuestionMarkdown();
         this.fetchQuestionBoilerplate().then(() => {
             this.initCodeMirror();
+            this.startTime = Date.now();  // Start timing when problem loads
         });
     },
     beforeUnmount() {
@@ -228,8 +231,11 @@ export default {
             const apiUrl = 'http://localhost:8000/code_execution';
             const problemId = this.$route.params.id;
 
-            this.output = runTests ? '' : 'Running...'; // Only show loading message for normal runs
-            this.testResults = []; // Clear previous test results
+            this.output = runTests ? '' : 'Running...';
+            this.testResults = [];
+
+            // Calculate time spent if running tests
+            const timeSpent = runTests ? Math.floor((Date.now() - this.startTime) / 1000) : 0;
 
             try {
                 const response = await fetch(`${apiUrl}/execute/`, {
@@ -238,27 +244,46 @@ export default {
                         'Content-Type': 'application/json',
                         Accept: 'application/json'
                     },
+                    credentials: 'include',  // Important for sending cookies
                     body: JSON.stringify({
                         code: this.code,
                         problem_id: problemId,
-                        run_tests: runTests
+                        run_tests: runTests,
+                        time_spent: timeSpent
                     })
                 });
 
-                if (!response.ok) throw new Error(`Execution error: ${response.status}`);
-
                 const data = await response.json();
 
-                if (runTests) {
-                    // Handle test results
-                    this.testResults = data.test_results || [];
+                if (!response.ok) {
+                    throw new Error(data.error || `Execution error: ${response.status}`);
+                }
+
+                if (data.test_results) {
+                    this.testResults = data.test_results;
+                    
+                    // If all tests passed, reset the timer
+                    if (data.all_tests_passed) {
+                        this.startTime = Date.now();
+                    }
+
+                    // If it's not a test run but we got an error, show it in the output
+                    if (!runTests && data.test_results[0]?.error) {
+                        this.output = data.test_results[0].error;
+                    }
                 } else {
-                    // Handle normal execution output
                     this.output = data.output || 'No output.';
                 }
             } catch (error) {
                 console.error('Failed to execute code:', error);
-                this.output = runTests ? '' : 'Execution failed: ' + error.message;
+                this.output = error.message || 'An unknown error occurred';
+                if (runTests) {
+                    this.testResults = [{
+                        test_name: "Code Execution",
+                        passed: false,
+                        error: error.message
+                    }];
+                }
             }
         },
 

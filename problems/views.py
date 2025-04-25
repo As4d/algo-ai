@@ -16,7 +16,38 @@ def get_problems(request):
     problems = Problem.objects.filter(problem_type=problem_type).values(
         'id', 'name', 'language', 'difficulty', 'problem_type', 'order'
     )
-    return JsonResponse(list(problems), safe=False)
+    
+    # Convert to list for modification
+    problems_list = list(problems)
+    
+    # If user is authenticated, include their progress
+    if request.user.is_authenticated:
+        progress_dict = {
+            progress.problem_id: {
+                'is_completed': progress.is_completed,
+                'attempts': progress.attempts
+            }
+            for progress in UserProgress.objects.filter(
+                user=request.user,
+                problem_id__in=[p['id'] for p in problems]
+            )
+        }
+        
+        # Add status to each problem
+        for problem in problems_list:
+            progress = progress_dict.get(problem['id'], {})
+            if progress.get('is_completed'):
+                problem['status'] = 'completed'
+            elif progress.get('attempts', 0) > 0:
+                problem['status'] = 'started'
+            else:
+                problem['status'] = 'not_started'
+    else:
+        # For unauthenticated users, set all problems as not started
+        for problem in problems_list:
+            problem['status'] = 'not_started'
+    
+    return JsonResponse(problems_list, safe=False)
 
 @require_http_methods(["GET"])
 @login_required

@@ -25,8 +25,7 @@
                     <i class="pi pi-check-circle text-blue-500 !text-xl"></i>
                 </div>
             </div>
-            <span class="text-primary font-medium">+{{ problemsSolvedThisWeek }} </span>
-            <span class="text-muted-color"> this week</span>
+            <div class="h-[24px]"></div>
         </div>
     </div>
 </template>
@@ -46,10 +45,6 @@ const props = defineProps({
         default: 0
     },
     totalProblemsSolved: {
-        type: Number,
-        default: 0
-    },
-    problemsSolvedThisWeek: {
         type: Number,
         default: 0
     }

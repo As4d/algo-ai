@@ -37,7 +37,6 @@ const formatScore = (score) => {
                         <div class="text-sm text-muted-color">{{ user.problemsSolved }} problems solved</div>
                     </div>
                 </div>
-                <div class="font-semibold">{{ formatScore(user.score) }} pts</div>
             </div>
         </div>
     </div>

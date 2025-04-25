@@ -44,9 +44,13 @@ const viewProblem = (problemId) => {
 
 const getStatusClass = (status) => {
     switch (status) {
-        case 'completed': return 'bg-green-500 text-white';
-        case 'started': return 'bg-yellow-500 text-black';
-        default: return 'bg-gray-300 text-black';
+        case 'completed':
+            return 'bg-green-500 text-white';
+        case 'started':
+            return 'bg-yellow-500 text-black';
+        case 'not_started':
+        default:
+            return 'bg-gray-300 text-black';
     }
 };
 
@@ -112,11 +116,24 @@ onBeforeMount(fetchProblems);
             <Column field="status" header="Status" style="min-width: 10rem" :sortable="true">
                 <template #body="{ data }">
                     <span class="px-2 py-1 rounded" :class="getStatusClass(data.status)">
-                        {{ data.status?.replace('_', ' ') || 'Not Started' }}
+                        {{ data.status === 'not_started' ? 'Not Started' : 
+                           data.status === 'started' ? 'In Progress' :
+                           'Completed' }}
                     </span>
                 </template>
                 <template #filter="{ filterModel }">
-                    <Dropdown v-model="filterModel.value" :options="statuses" placeholder="Filter by Status" showClear />
+                    <Dropdown 
+                        v-model="filterModel.value" 
+                        :options="[
+                            { label: 'Not Started', value: 'not_started' },
+                            { label: 'In Progress', value: 'started' },
+                            { label: 'Completed', value: 'completed' }
+                        ]" 
+                        optionLabel="label"
+                        optionValue="value"
+                        placeholder="Filter by Status" 
+                        showClear 
+                    />
                 </template>
             </Column>
 
