@@ -10,20 +10,45 @@
                     </div>
 
                     <div>
-                        <label for="email1" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
-                        <InputText id="email1" type="text" placeholder="Email address" class="w-full md:w-[30rem] mb-8" v-model="email" />
+                        <label for="email" class="block text-surface-900 dark:text-surface-0 text-xl font-medium mb-2">Email</label>
+                        <InputText 
+                            id="email" 
+                            type="email" 
+                            placeholder="Email address" 
+                            class="w-full md:w-[30rem] mb-8" 
+                            v-model="email"
+                            @keyup.enter="login"
+                        />
 
-                        <label for="password1" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
-                        <Password id="password1" v-model="password" placeholder="Password" :toggleMask="true" class="mb-4" fluid :feedback="false"></Password>
+                        <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
+                        <Password 
+                            id="password" 
+                            v-model="password" 
+                            placeholder="Password" 
+                            :toggleMask="true" 
+                            class="mb-4" 
+                            fluid 
+                            :feedback="false"
+                            @keyup.enter="login"
+                        />
+
+                        <div v-if="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+                            {{ error }}
+                        </div>
 
                         <div class="flex items-center justify-between mt-2 mb-8 gap-8">
                             <div class="flex items-center">
-                                <Checkbox v-model="checked" id="rememberme1" binary class="mr-2"></Checkbox>
-                                <label for="rememberme1">Remember me</label>
+                                <Checkbox v-model="rememberMe" id="rememberme" binary class="mr-2"></Checkbox>
+                                <label for="rememberme">Remember me</label>
                             </div>
                             <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
                         </div>
-                        <Button label="Sign In" class="w-full" @click="login"></Button>
+                        <Button 
+                            label="Sign In" 
+                            class="w-full" 
+                            @click="login"
+                            :loading="isLoading"
+                        />
                         <div class="text-center mt-4">
                             <span class="text-muted-color">Don't have an account? </span>
                             <router-link to="/auth/register" class="font-medium no-underline text-primary cursor-pointer">Register</router-link>
@@ -37,6 +62,7 @@
 
 <script>
 import { useAuthStore } from '@/store/auth';
+import { getCSRFToken } from '@/store/auth';
 import { useRouter } from 'vue-router';
 
 export default {
@@ -53,15 +79,57 @@ export default {
             email: '',
             password: '',
             error: '',
-            checked: false
+            rememberMe: false,
+            isLoading: false
         };
     },
     methods: {
         async login() {
-            await this.authStore.login(this.email, this.password, this.$router);
-            if (!this.authStore.isAuthenticated) {
-                this.error = 'Login failed. Please check your credentials.';
+            if (!this.email || !this.password) {
+                this.error = 'Please enter both email and password';
+                return;
             }
+
+            if (!this.validateEmail(this.email)) {
+                this.error = 'Please enter a valid email address';
+                return;
+            }
+
+            this.error = '';
+            this.isLoading = true;
+
+            try {
+                const response = await fetch('http://localhost:8000/api/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': getCSRFToken()
+                    },
+                    body: JSON.stringify({
+                        email: this.email,
+                        password: this.password
+                    }),
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (response.ok && data.success) {
+                    await this.authStore.fetchUser();
+                    this.router.push({ name: 'home' });
+                } else {
+                    this.error = data.message || 'Invalid email or password';
+                }
+            } catch (error) {
+                console.error('Login error:', error);
+                this.error = 'An error occurred during login. Please try again.';
+            } finally {
+                this.isLoading = false;
+            }
+        },
+        validateEmail(email) {
+            const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            return re.test(email);
         },
         resetError() {
             this.error = '';

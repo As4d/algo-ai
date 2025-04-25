@@ -20,7 +20,8 @@
                     <div class="space-y-6">
                         <div>
                             <label class="block text-sm text-muted-color mb-1">Description</label>
-                            <p class="text-surface-900 dark:text-surface-0">{{ user.description || 'No description yet' }}</p>
+                            <p class="text-surface-900 dark:text-surface-0">{{ user.description || 'No description yet'
+                                }}</p>
                         </div>
                         <div>
                             <label class="block text-sm text-muted-color mb-1">Member Since</label>
@@ -28,46 +29,36 @@
                         </div>
                         <div>
                             <label class="block text-sm text-muted-color mb-1">Password Last Changed</label>
-                            <p class="text-surface-900 dark:text-surface-0">{{ formatDate(user.password_last_changed) }}</p>
+                            <p class="text-surface-900 dark:text-surface-0">{{ formatDate(user.password_last_changed) }}
+                            </p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Action Buttons -->
                 <div class="mt-6 text-right space-x-2">
-                    <Button label="Change Password" icon="pi pi-lock" @click="showPasswordDialog" class="p-button-secondary" />
+                    <Button label="Change Password" icon="pi pi-lock" @click="showPasswordDialog"
+                        class="p-button-secondary" />
                     <Button label="Edit Profile" icon="pi pi-pencil" @click="showEditDialog" />
                 </div>
 
                 <!-- Edit Profile Dialog -->
-                <Dialog 
-                    v-model:visible="editDialogVisible" 
-                    header="Edit Profile" 
-                    :modal="true" 
-                    class="edit-profile-dialog"
-                    :contentClass="'surface-ground'"
-                    :headerClass="'surface-section'"
-                >
+                <Dialog v-model:visible="editDialogVisible" header="Edit Profile" :modal="true"
+                    class="edit-profile-dialog" :contentClass="'surface-ground'" :headerClass="'surface-section'">
                     <div class="surface-section p-4 rounded-lg">
                         <div class="field mb-4">
-                            <label for="experience_level" class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">Experience Level</label>
-                            <Dropdown 
-                                v-model="editForm.experience_level" 
-                                :options="experienceLevels" 
-                                optionLabel="label"
-                                optionValue="value"
-                                placeholder="Select Experience Level"
-                                class="w-full"
-                            />
+                            <label for="experience_level"
+                                class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">Experience
+                                Level</label>
+                            <Dropdown v-model="editForm.experience_level" :options="experienceLevels"
+                                optionLabel="label" optionValue="value" placeholder="Select Experience Level"
+                                class="w-full" />
                         </div>
                         <div class="field mb-4">
-                            <label for="description" class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">Description</label>
-                            <Textarea 
-                                v-model="editForm.description" 
-                                rows="4" 
-                                class="w-full"
-                                placeholder="Tell us about yourself..."
-                            />
+                            <label for="description"
+                                class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">Description</label>
+                            <Textarea v-model="editForm.description" rows="4" class="w-full"
+                                placeholder="Tell us about yourself..." />
                         </div>
                     </div>
                     <template #footer>
@@ -79,49 +70,36 @@
                 </Dialog>
 
                 <!-- Change Password Dialog -->
-                <Dialog 
-                    v-model:visible="passwordDialogVisible" 
-                    header="Change Password" 
-                    :modal="true" 
-                    class="edit-profile-dialog"
-                    :contentClass="'surface-ground'"
-                    :headerClass="'surface-section'"
-                >
+                <Dialog v-model:visible="passwordDialogVisible" header="Change Password" :modal="true"
+                    class="edit-profile-dialog" :contentClass="'surface-ground'" :headerClass="'surface-section'">
                     <div class="surface-section p-4 rounded-lg">
                         <div class="field mb-4">
-                            <label for="current_password" class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">Current Password</label>
-                            <Password
-                                v-model="passwordForm.current_password"
-                                :feedback="false"
-                                toggleMask
-                                class="w-full"
-                                inputClass="w-full"
-                            />
+                            <label for="current_password"
+                                class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">Current
+                                Password</label>
+                            <Password v-model="passwordForm.current_password" :feedback="false" toggleMask
+                                class="w-full" inputClass="w-full" />
                         </div>
                         <div class="field mb-4">
-                            <label for="new_password" class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">New Password</label>
-                            <Password
-                                v-model="passwordForm.new_password"
-                                toggleMask
-                                class="w-full"
-                                inputClass="w-full"
-                            />
+                            <label for="new_password"
+                                class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">New
+                                Password</label>
+                            <Password v-model="passwordForm.new_password" toggleMask class="w-full"
+                                inputClass="w-full" />
                         </div>
                         <div class="field mb-4">
-                            <label for="confirm_password" class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">Confirm New Password</label>
-                            <Password
-                                v-model="passwordForm.confirm_password"
-                                :feedback="false"
-                                toggleMask
-                                class="w-full"
-                                inputClass="w-full"
-                            />
+                            <label for="confirm_password"
+                                class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">Confirm New
+                                Password</label>
+                            <Password v-model="passwordForm.confirm_password" :feedback="false" toggleMask
+                                class="w-full" inputClass="w-full" />
                         </div>
                         <small v-if="passwordError" class="p-error block mt-2">{{ passwordError }}</small>
                     </div>
                     <template #footer>
                         <div class="surface-section py-3 px-6 flex justify-end gap-2">
-                            <Button label="Cancel" icon="pi pi-times" @click="hidePasswordDialog" class="p-button-text" />
+                            <Button label="Cancel" icon="pi pi-times" @click="hidePasswordDialog"
+                                class="p-button-text" />
                             <Button label="Change Password" icon="pi pi-check" @click="changePassword" autofocus />
                         </div>
                     </template>
@@ -254,7 +232,7 @@ export default {
                 });
 
                 const data = await response.json();
-                
+
                 if (response.ok) {
                     this.hidePasswordDialog();
                     // Refresh profile to get updated password_last_changed

@@ -3,6 +3,7 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import ensure_csrf_cookie, csrf_protect
 import json
 from django.utils import timezone
+from django.contrib.auth.models import User
 
 from django.views.decorators.http import require_http_methods
 from django.views.decorators.csrf import csrf_exempt
@@ -31,14 +32,22 @@ def login_view(request):
             {'success': False, 'message': 'Invalid JSON'}, status=400
         )
 
-    user = authenticate(request, username=email, password=password)
-
-    if user:
-        login(request, user)
-        return JsonResponse({'success': True})
-    return JsonResponse(
-        {'success': False, 'message': 'Invalid credentials'}, status=401
-    )
+    try:
+        # Get user by email
+        user = User.objects.get(email=email)
+        # Authenticate with username and password
+        auth_user = authenticate(request, username=user.username, password=password)
+        
+        if auth_user:
+            login(request, auth_user)
+            return JsonResponse({'success': True})
+        return JsonResponse(
+            {'success': False, 'message': 'Invalid credentials'}, status=401
+        )
+    except User.DoesNotExist:
+        return JsonResponse(
+            {'success': False, 'message': 'Invalid credentials'}, status=401
+        )
 
 
 def logout_view(request):
