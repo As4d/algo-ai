@@ -4,8 +4,18 @@ from django.utils import timezone
 
 
 class Profile(models.Model):
+    EXPERIENCE_LEVELS = [
+        ('beginner', 'Beginner'),
+        ('intermediate', 'Intermediate'),
+        ('advanced', 'Advanced'),
+    ]
+    
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    experience_level = models.CharField(max_length=50)
+    experience_level = models.CharField(
+        max_length=50,
+        choices=EXPERIENCE_LEVELS,
+        default='beginner'
+    )
     description = models.CharField(max_length=500, null=True, blank=True)
     streak = models.IntegerField(default=0)
     high_score_streak = models.IntegerField(default=0)
