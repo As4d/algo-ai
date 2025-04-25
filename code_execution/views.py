@@ -176,9 +176,13 @@ def execute_code(request):
                 }
             )
             
-            if not created and not user_progress.is_completed:
+            if not created:
                 # Only update if this is the first time solving this problem
-                leaderboard_entry.total_solved += 1
+                if not user_progress.is_completed:
+                    leaderboard_entry.total_solved += 1
+                    leaderboard_entry.save()
+            else:
+                # For new entries, we already set total_solved to 1
                 leaderboard_entry.save()
 
         return JsonResponse({
