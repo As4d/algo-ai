@@ -147,4 +147,3 @@ def change_password(request):
         return JsonResponse({'message': 'Invalid JSON'}, status=400)
     except Exception as e:
         return JsonResponse({'message': str(e)}, status=400)
-
