@@ -116,7 +116,7 @@ export default {
 
                 if (response.ok && data.success) {
                     await this.authStore.fetchUser();
-                    this.router.push({ name: 'home' });
+                    this.router.push({ name: 'profile' });
                 } else {
                     this.error = data.message || 'Invalid email or password';
                 }

@@ -11,6 +11,7 @@ const router = createRouter({
             path: '/',
             name: 'home',
             component: AppLayout,
+            beforeEnter: requireAuth,
             children: [
                 {
                     path: '',
