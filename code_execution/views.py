@@ -158,6 +158,9 @@ def execute_code(request):
             }
         )
 
+        # Check if this problem was completed before
+        was_completed_before = user_progress.is_completed
+
         # Update progress
         user_progress.attempts += 1
         if time_spent > 0:
@@ -169,20 +172,26 @@ def execute_code(request):
 
         # Update leaderboard if all tests passed
         if all_tests_passed:
+            print(f"All tests passed, updating leaderboard for user {request.user.username}")
             leaderboard_entry, created = LeaderboardEntry.objects.get_or_create(
                 user=request.user,
                 defaults={
                     'total_solved': 1
                 }
             )
+            print(f"Leaderboard entry created: {created}, current total_solved: {leaderboard_entry.total_solved}")
             
             if not created:
-                # Only update if this is the first time solving this problem
-                if not user_progress.is_completed:
+                if not was_completed_before:
+                    print(f"Problem {problem.id} was not previously completed, incrementing total_solved")
                     leaderboard_entry.total_solved += 1
                     leaderboard_entry.save()
+                    print(f"New total_solved: {leaderboard_entry.total_solved}")
+                else:
+                    print(f"Problem {problem.id} was already completed, not incrementing count")
             else:
                 # For new entries, we already set total_solved to 1
+                print(f"New leaderboard entry created with total_solved: {leaderboard_entry.total_solved}")
                 leaderboard_entry.save()
 
         return JsonResponse({

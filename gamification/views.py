@@ -30,14 +30,14 @@ def get_user_stats(request):
     """
     Returns the current user's leaderboard stats.
     """
-    entry, created = LeaderboardEntry.objects.get_or_create(
-        user=request.user,
-        defaults={
-            'total_solved': 0
-        }
-    )
-    
-    return JsonResponse({
-        'total_solved': entry.total_solved,
-        'last_updated': entry.last_updated
-    })
+    try:
+        entry = LeaderboardEntry.objects.get(user=request.user)
+        return JsonResponse({
+            'total_solved': entry.total_solved,
+            'last_updated': entry.last_updated
+        })
+    except LeaderboardEntry.DoesNotExist:
+        return JsonResponse({
+            'total_solved': 0,
+            'last_updated': None
+        })
