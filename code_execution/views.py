@@ -8,6 +8,7 @@ from django.contrib.auth.decorators import login_required
 from django.utils import timezone
 from problems.models import Problem, UserProgress, Submission
 from gamification.models import LeaderboardEntry
+from accounts.models import Profile
 
 def run_code_with_test(code, test_input=""):
     """
@@ -147,6 +148,29 @@ def create_submission(user, problem, user_code, all_tests_passed):
     )
     return submission
 
+def update_streak(user):
+    """
+    Update the user's streak based on their problem-solving activity.
+    Streak increases by 1 per day when a problem is solved, and resets if more than 1 day passes.
+    """
+    today = timezone.now().date()
+    profile = Profile.objects.get(user=user)
+    
+    if profile.last_solved_date is None or (today - profile.last_solved_date).days > 1:
+        # Reset streak if more than 1 day has passed
+        profile.streak = 1
+    elif profile.last_solved_date < today:
+        # Only increment streak if this is the first problem solved today
+        profile.streak += 1
+        
+    # Update high score streak if current streak is higher
+    if profile.streak > profile.high_score_streak:
+        profile.high_score_streak = profile.streak
+        
+    # Update last solved date
+    profile.last_solved_date = today
+    profile.save()
+
 @csrf_exempt
 def execute_code(request):
     if request.method != "POST":
@@ -230,9 +254,10 @@ def execute_code(request):
         # Update user progress
         update_user_progress(request.user, problem, time_spent, all_tests_passed)
 
-        # Update leaderboard if all tests passed and problem wasn't completed before
+        # Update leaderboard and streak if all tests passed and problem wasn't completed before
         if all_tests_passed:
             update_leaderboard(request.user, problem, was_completed_before)
+            update_streak(request.user)
 
         return JsonResponse({
             "all_tests_passed": all_tests_passed,

@@ -23,6 +23,7 @@ class Profile(models.Model):
     description = models.CharField(max_length=500, null=True, blank=True)
     streak = models.IntegerField(default=0)
     high_score_streak = models.IntegerField(default=0)
+    last_solved_date = models.DateField(null=True, blank=True)
     password_last_changed = models.DateField(null=True, blank=True)
 
     def __str__(self):

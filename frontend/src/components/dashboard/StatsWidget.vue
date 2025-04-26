@@ -11,8 +11,11 @@
                     <i class="pi pi-bolt text-green-500 !text-xl"></i>
                 </div>
             </div>
-            <span class="text-primary font-medium">{{ daysToHighScore }} days </span>
-            <span class="text-muted-color">to beat high score ({{ highScore }})</span>
+            <span v-if="currentStreak === highScore" class="text-primary font-medium">New high score! 🔥</span>
+            <span v-else>
+                <span class="text-primary font-medium">{{ daysToHighScore }} days </span>
+                <span class="text-muted-color">to beat high score ({{ highScore }})</span>
+            </span>
         </div>
     </div>
     <div class="col-span-12 lg:col-span-6 xl:col-span-6">
