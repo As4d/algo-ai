@@ -67,6 +67,72 @@ def compare_outputs(expected, actual):
     actual = actual.strip().replace('\r\n', '\n')
     return expected == actual
 
+def update_leaderboard(user, problem):
+    """
+    Update the leaderboard for a user when they complete a problem.
+    Only increments the total_solved count if the problem wasn't completed before.
+    """
+    leaderboard_entry, created = LeaderboardEntry.objects.get_or_create(
+        user=user,
+        defaults={
+            'total_solved': 1
+        }
+    )
+    
+    if not created:
+        # Check if this specific problem was completed before
+        problem_completed_before = UserProgress.objects.filter(
+            user=user,
+            problem=problem,
+            is_completed=True
+        ).exists()
+        
+        if not problem_completed_before:
+            leaderboard_entry.total_solved += 1
+            leaderboard_entry.save()
+    
+    return leaderboard_entry
+
+def update_user_progress(user, problem, time_spent, all_tests_passed):
+    """
+    Update the user's progress for a specific problem.
+    Handles both new and existing progress entries.
+    """
+    user_progress, created = UserProgress.objects.get_or_create(
+        user=user,
+        problem=problem,
+        defaults={
+            'is_completed': False,
+            'time_spent': 0,
+            'attempts': 0
+        }
+    )
+
+    # Update progress
+    user_progress.attempts += 1
+    if time_spent > 0:
+        user_progress.time_spent = time_spent
+    if all_tests_passed:
+        user_progress.is_completed = True
+        user_progress.last_submitted = timezone.now()
+    user_progress.save()
+    
+    return user_progress
+
+def create_submission(user, problem, user_code, all_tests_passed):
+    """
+    Create a submission record for a user's code attempt.
+    """
+    submission = Submission.objects.create(
+        user=user,
+        problem=problem,
+        code_submitted=user_code,
+        status='completed' if all_tests_passed else 'attempted',
+        language=problem.language,
+        created_at=timezone.now()
+    )
+    return submission
+
 @csrf_exempt
 def execute_code(request):
     if request.method != "POST":
@@ -77,7 +143,7 @@ def execute_code(request):
         user_code = data.get("code", "").strip()
         problem_id = data.get("problem_id")
         run_tests = data.get("run_tests", False)
-        time_spent = data.get("time_spent", 0)  # New parameter for tracking time spent
+        time_spent = data.get("time_spent", 0)
 
         if not user_code:
             return JsonResponse({"error": "No code provided"}, status=400)
@@ -138,61 +204,14 @@ def execute_code(request):
                 })
 
         # Create submission record
-        submission = Submission.objects.create(
-            user=request.user,
-            problem=problem,
-            code_submitted=user_code,
-            status='completed' if all_tests_passed else 'attempted',
-            language=problem.language,
-            created_at=timezone.now()
-        )
+        submission = create_submission(request.user, problem, user_code, all_tests_passed)
 
         # Update user progress
-        user_progress, created = UserProgress.objects.get_or_create(
-            user=request.user,
-            problem=problem,
-            defaults={
-                'is_completed': False,
-                'time_spent': 0,
-                'attempts': 0
-            }
-        )
-
-        # Check if this problem was completed before
-        was_completed_before = user_progress.is_completed
-
-        # Update progress
-        user_progress.attempts += 1
-        if time_spent > 0:
-            user_progress.time_spent = time_spent
-        if all_tests_passed:
-            user_progress.is_completed = True
-            user_progress.last_submitted = timezone.now()
-        user_progress.save()
+        update_user_progress(request.user, problem, time_spent, all_tests_passed)
 
         # Update leaderboard if all tests passed
         if all_tests_passed:
-            print(f"All tests passed, updating leaderboard for user {request.user.username}")
-            leaderboard_entry, created = LeaderboardEntry.objects.get_or_create(
-                user=request.user,
-                defaults={
-                    'total_solved': 1
-                }
-            )
-            print(f"Leaderboard entry created: {created}, current total_solved: {leaderboard_entry.total_solved}")
-            
-            if not created:
-                if not was_completed_before:
-                    print(f"Problem {problem.id} was not previously completed, incrementing total_solved")
-                    leaderboard_entry.total_solved += 1
-                    leaderboard_entry.save()
-                    print(f"New total_solved: {leaderboard_entry.total_solved}")
-                else:
-                    print(f"Problem {problem.id} was already completed, not incrementing count")
-            else:
-                # For new entries, we already set total_solved to 1
-                print(f"New leaderboard entry created with total_solved: {leaderboard_entry.total_solved}")
-                leaderboard_entry.save()
+            update_leaderboard(request.user, problem)
 
         return JsonResponse({
             "all_tests_passed": all_tests_passed,
