@@ -12,6 +12,7 @@ from gamification.models import LeaderboardEntry
 def run_code_with_test(code, test_input=""):
     """
     Run code with given test input and return the output.
+    Handles comma-separated inputs by preprocessing them.
     """
     output_buffer = io.StringIO()
     sys.stdout = output_buffer
@@ -44,7 +45,19 @@ def run_code_with_test(code, test_input=""):
 
         # If there's test input, simulate stdin
         if test_input:
-            sys.stdin = io.StringIO(test_input)
+            # Preprocess comma-separated input
+            input_values = [x.strip() for x in test_input.split(',')]
+            input_queue = iter(input_values)
+            
+            # Override input() function to get from our queue
+            def custom_input(prompt=""):
+                try:
+                    return next(input_queue)
+                except StopIteration:
+                    return ""
+            
+            # Add our custom input to safe builtins
+            SAFE_BUILTINS["input"] = custom_input
 
         # Execute the code with restricted builtins
         exec(code, {"__builtins__": SAFE_BUILTINS}, {})
@@ -67,29 +80,30 @@ def compare_outputs(expected, actual):
     actual = actual.strip().replace('\r\n', '\n')
     return expected == actual
 
-def update_leaderboard(user, problem):
+def update_leaderboard(user, problem, was_completed_before):
     """
     Update the leaderboard for a user when they complete a problem.
     Only increments the total_solved count if the problem wasn't completed before.
     """
+    print(f"Updating leaderboard for user {user.username}, problem {problem.id}")
+    
     leaderboard_entry, created = LeaderboardEntry.objects.get_or_create(
         user=user,
         defaults={
             'total_solved': 1
         }
     )
+    print(f"Leaderboard entry created: {created}, current total_solved: {leaderboard_entry.total_solved}")
     
-    if not created:
-        # Check if this specific problem was completed before
-        problem_completed_before = UserProgress.objects.filter(
-            user=user,
-            problem=problem,
-            is_completed=True
-        ).exists()
-        
-        if not problem_completed_before:
-            leaderboard_entry.total_solved += 1
-            leaderboard_entry.save()
+    if not created and not was_completed_before:
+        print(f"Incrementing total_solved from {leaderboard_entry.total_solved} to {leaderboard_entry.total_solved + 1}")
+        leaderboard_entry.total_solved += 1
+        leaderboard_entry.save()
+        print(f"New total_solved: {leaderboard_entry.total_solved}")
+    elif created:
+        print(f"New leaderboard entry created with total_solved: {leaderboard_entry.total_solved}")
+    else:
+        print(f"Problem {problem.id} was already completed, not incrementing count")
     
     return leaderboard_entry
 
@@ -203,15 +217,22 @@ def execute_code(request):
                     "error": result["error"]
                 })
 
+        # Check if problem was previously completed
+        was_completed_before = UserProgress.objects.filter(
+            user=request.user,
+            problem=problem,
+            is_completed=True
+        ).exists()
+
         # Create submission record
         submission = create_submission(request.user, problem, user_code, all_tests_passed)
 
         # Update user progress
         update_user_progress(request.user, problem, time_spent, all_tests_passed)
 
-        # Update leaderboard if all tests passed
+        # Update leaderboard if all tests passed and problem wasn't completed before
         if all_tests_passed:
-            update_leaderboard(request.user, problem)
+            update_leaderboard(request.user, problem, was_completed_before)
 
         return JsonResponse({
             "all_tests_passed": all_tests_passed,
