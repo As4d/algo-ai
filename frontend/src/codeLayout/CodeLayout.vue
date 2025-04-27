@@ -63,7 +63,6 @@
                 <button @click="getHint" class="bg-green-500 text-white px-4 py-2 rounded-lg">Get Hint</button>
             </div>
             <div class="flex-1 p-4 bg-gray-100 dark:bg-gray-800 overflow-y-auto">
-                <h2 class="text-md font-semibold mb-3">Hint</h2>
                 <div class="markdown-content h-full">
                     <div v-html="compiledHint"></div>
                 </div>
