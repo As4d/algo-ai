@@ -1,12 +1,20 @@
 import { computed, reactive } from 'vue';
 
+// Initialize darkTheme from localStorage or default to false
+const storedDarkTheme = localStorage.getItem('darkTheme') === 'true';
+
 const layoutConfig = reactive({
     preset: 'Aura',
     primary: 'emerald',
     surface: null,
-    darkTheme: false,
+    darkTheme: storedDarkTheme,
     menuMode: 'static'
 });
+
+// Initialize dark mode class if needed
+if (storedDarkTheme) {
+    document.documentElement.classList.add('app-dark');
+}
 
 const layoutState = reactive({
     staticMenuDesktopInactive: false,
@@ -26,16 +34,17 @@ export function useLayout() {
     const toggleDarkMode = () => {
         if (!document.startViewTransition) {
             executeDarkModeToggle();
-
             return;
         }
 
-        document.startViewTransition(() => executeDarkModeToggle(event));
+        document.startViewTransition(() => executeDarkModeToggle());
     };
 
     const executeDarkModeToggle = () => {
         layoutConfig.darkTheme = !layoutConfig.darkTheme;
         document.documentElement.classList.toggle('app-dark');
+        // Save dark mode preference
+        localStorage.setItem('darkTheme', layoutConfig.darkTheme);
     };
 
     const toggleMenu = () => {

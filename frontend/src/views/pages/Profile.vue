@@ -58,7 +58,7 @@
                             <label for="description"
                                 class="block text-surface-900 dark:text-surface-0 text-sm font-medium mb-2">Description</label>
                             <Textarea v-model="editForm.description" rows="4" class="w-full"
-                                placeholder="Tell us about yourself..." />
+                                placeholder="Tell us about yourself, this will help us tailor the AI chat to your needs." />
                         </div>
                     </div>
                     <template #footer>

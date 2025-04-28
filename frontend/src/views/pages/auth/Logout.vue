@@ -3,13 +3,12 @@ import { useAuthStore } from '@/store/auth';
 
 export default {
     name: 'Logout',
-    created() {
-        this.logout();
-    },
-    methods: {
-        logout() {
+    async created() {
+        try {
             const authStore = useAuthStore();
-            authStore.logout();
+            await authStore.logout(this.$router);
+        } catch (error) {
+            console.error('Logout failed:', error);
             this.$router.push('/auth/login');
         }
     }

@@ -50,9 +50,13 @@ def login_view(request):
         )
 
 
+@csrf_protect
+@require_http_methods(['POST'])
 def logout_view(request):
     logout(request)
-    return JsonResponse({'message': 'Logged out'})
+    response = JsonResponse({'message': 'Logged out'})
+    response.delete_cookie('sessionid')  # Only delete session cookie
+    return response
 
 
 @require_http_methods(['GET'])
