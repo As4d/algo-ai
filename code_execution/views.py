@@ -277,6 +277,10 @@ def execute_code(request):
 
         # Simple code execution without tests
         if not run_tests:
+            if 'input(' in user_code:
+                return JsonResponse({
+                    "error": "input() is not supported when running code directly. Tip: Hardcode your input values in your code for testing, e.g., a = 3 instead of a = int(input())."
+                })
             result = run_code_with_test(user_code)
             if result["success"]:
                 return JsonResponse({"output": result["output"]})

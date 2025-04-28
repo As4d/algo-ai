@@ -270,6 +270,8 @@ export default {
                     if (!runTests && data.test_results[0]?.error) {
                         this.output = data.test_results[0].error;
                     }
+                } else if (data.error) {
+                    this.output = data.error;
                 } else {
                     this.output = data.output || 'No output.';
                 }
@@ -298,6 +300,7 @@ export default {
                         'Content-Type': 'application/json',
                         Accept: 'application/json'
                     },
+                    credentials: 'include',  // Add this line to send cookies
                     body: JSON.stringify({
                         question: this.questionMarkdown,
                         code: this.code,
