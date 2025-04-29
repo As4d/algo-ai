@@ -17,6 +17,7 @@ class Plan(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     problems = models.ManyToManyField(Problem, through='PlanProblem')
+    ai_explanation = models.TextField(blank=True)
 
     def __str__(self):
         return f"{self.user.username}'s {self.name} Plan"

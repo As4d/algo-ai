@@ -105,6 +105,14 @@ const router = createRouter({
             children: [
                 { path: '', name: 'createPlan', component: () => import('@/views/pages/plan/CreatePlan.vue') }
             ]
+        },
+        {
+            path: '/plan/:id',
+            component: AppLayout,
+            beforeEnter: requireAuth,
+            children: [
+                { path: '', name: 'plan', component: () => import('@/views/pages/plan/Plan.vue') }
+            ]
         }
     ]
 });
