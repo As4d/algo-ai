@@ -15,6 +15,13 @@ const model = ref([
             { label: 'Problem Sets', icon: 'pi pi-fw pi-pencil', to: '/problem-sets' },
             { label: 'Learn Python Basics', icon: 'pi pi-fw pi-book', to: '/learn-python-basics' }
         ]
+    },
+    {
+        label: 'Learning Plans',
+        items: [
+            { label: 'Your Plans', icon: 'pi pi-fw pi-calendar', to: '/plans' },
+            { label: 'Create Plan', icon: 'pi pi-fw pi-plus', to: '/create-plan' }
+        ]
     }
     
 ]);

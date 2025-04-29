@@ -90,6 +90,22 @@ const router = createRouter({
 
             ]
         },
+        {
+            path: '/plans',
+            component: AppLayout,
+            beforeEnter: requireAuth,
+            children: [
+                { path: '', name: 'plans', component: () => import('@/views/pages/plan/Plans.vue') }
+            ]
+        },
+        {
+            path: '/create-plan',
+            component: AppLayout,
+            beforeEnter: requireAuth,
+            children: [
+                { path: '', name: 'createPlan', component: () => import('@/views/pages/plan/CreatePlan.vue') }
+            ]
+        }
     ]
 });
 
