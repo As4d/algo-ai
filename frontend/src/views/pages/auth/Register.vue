@@ -19,6 +19,9 @@
                         <label for="password" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Password</label>
                         <Password id="password" v-model="password" placeholder="Password" :toggleMask="true" class="mb-8" fluid :feedback="true"></Password>
 
+                        <label for="confirmPassword" class="block text-surface-900 dark:text-surface-0 font-medium text-xl mb-2">Confirm Password</label>
+                        <Password id="confirmPassword" v-model="confirmPassword" placeholder="Confirm Password" :toggleMask="true" class="mb-8" fluid :feedback="true"></Password>
+
                         <div v-if="error" class="text-red-500 text-sm mb-4">{{ error }}</div>
                         <div v-if="success" class="text-green-500 text-sm mb-4">{{ success }}</div>
 
@@ -44,12 +47,23 @@ export default {
             username: '',
             email: '',
             password: '',
+            confirmPassword: '',
             error: '',
             success: ''
         };
     },
     methods: {
         async register() {
+            if (this.password.length < 8) {
+                this.error = 'Password must be at least 8 characters long';
+                return;
+            }
+
+            if (this.password !== this.confirmPassword) {
+                this.error = 'Passwords do not match';
+                return;
+            }
+
             try {
                 const response = await fetch('http://localhost:8000/api/register', {
                     method: 'POST',

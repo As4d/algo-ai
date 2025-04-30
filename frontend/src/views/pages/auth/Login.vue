@@ -35,13 +35,6 @@
                             {{ error }}
                         </div>
 
-                        <div class="flex items-center justify-between mt-2 mb-8 gap-8">
-                            <div class="flex items-center">
-                                <Checkbox v-model="rememberMe" id="rememberme" binary class="mr-2"></Checkbox>
-                                <label for="rememberme">Remember me</label>
-                            </div>
-                            <span class="font-medium no-underline ml-2 text-right cursor-pointer text-primary">Forgot password?</span>
-                        </div>
                         <Button 
                             label="Sign In" 
                             class="w-full" 
@@ -85,7 +78,6 @@ export default {
             email: '',
             password: '',
             error: '',
-            rememberMe: false,
             isLoading: false
         };
     },
