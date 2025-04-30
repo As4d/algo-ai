@@ -5,40 +5,66 @@ from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from accounts.models import Profile
 from django.core.exceptions import ObjectDoesNotExist
+from problems.models import Problem
 
 OPENROUTER_API_KEY = os.getenv("OPENROUTER_API_KEY")
 SITE_URL = ""
 SITE_NAME = ""
 
-EXPERIENCE_GUIDANCE = {
-    'beginner': """
-    **Beginner-Specific Guidance:**
-    - Focus on explaining basic programming concepts and syntax
-    - Break down complex problems into smaller, manageable steps
-    - Provide clear examples and analogies
-    - Explain common beginner mistakes and how to avoid them
-    - Use simple, non-technical language when possible
-    - Reinforce fundamental programming concepts
-    """,
-    'intermediate': """
-    **Intermediate-Specific Guidance:**
-    - Focus on code structure and best practices
-    - Discuss optimization techniques and trade-offs
-    - Explain more advanced programming concepts
-    - Provide insights into algorithm design
-    - Encourage thinking about edge cases and error handling
-    - Discuss code maintainability and readability
-    """,
-    'advanced': """
-    **Advanced-Specific Guidance:**
-    - Focus on high-level design patterns and architecture
-    - Discuss performance optimization and scalability
-    - Explore advanced algorithms and data structures
-    - Encourage thinking about system design
-    - Discuss trade-offs between different approaches
-    - Provide insights into industry best practices
+# Load problem type prompts
+with open(os.path.join(os.path.dirname(__file__), 'prompt_building_blocks', 'problem_type_prompts.json'), 'r') as f:
+    PROBLEM_TYPE_PROMPTS = json.load(f)
+
+# Load experience guidance
+with open(os.path.join(os.path.dirname(__file__), 'prompt_building_blocks', 'experience_guidance.json'), 'r') as f:
+    EXPERIENCE_GUIDANCE = json.load(f)
+
+def get_problem_type_prompt(problem_id):
     """
-}
+    Get the problem type specific prompt based on the problem ID.
+    
+    Args:
+        problem_id (int): The ID of the problem
+        
+    Returns:
+        str: The formatted problem type specific prompt, or empty string if no matching prompt
+    """
+    if not problem_id:
+        return ""
+        
+    try:
+        problem = Problem.objects.get(id=problem_id)
+        problem_type = problem.problem_type
+        if problem_type in PROBLEM_TYPE_PROMPTS:
+            return f"""
+            **Problem Type Specific Guidance:**
+            {PROBLEM_TYPE_PROMPTS[problem_type]['hint_guidance']}
+            
+            {PROBLEM_TYPE_PROMPTS[problem_type]['additional_context']}
+            """
+    except Problem.DoesNotExist:
+        pass
+        
+    return ""
+
+def get_experience_guidance(experience_level):
+    """
+    Get the experience level specific guidance.
+    
+    Args:
+        experience_level (str): The user's experience level (beginner, intermediate, or advanced)
+        
+    Returns:
+        str: The formatted experience level guidance
+    """
+    if experience_level not in EXPERIENCE_GUIDANCE:
+        return ""
+        
+    return f"""
+    {EXPERIENCE_GUIDANCE[experience_level]['guidance']}
+    
+    {EXPERIENCE_GUIDANCE[experience_level]['context']}
+    """
 
 @csrf_exempt
 def ai_chat(request):
@@ -53,6 +79,7 @@ def ai_chat(request):
         user_code = data.get("code", "").strip()
         terminal_output = data.get("terminal", "").strip()
         problem_description = data.get("question", "").strip()
+        problem_id = data.get("problem_id")
 
         if not user_code or not problem_description:
             return JsonResponse({"error": "Missing required fields"}, status=400)
@@ -65,6 +92,12 @@ def ai_chat(request):
             return JsonResponse({"error": "User profile not found. Please complete your profile setup."}, status=404)
         except Exception:
             return JsonResponse({"error": "Error accessing user profile"}, status=500)
+
+        # Get problem type specific prompt
+        problem_type_prompt = get_problem_type_prompt(problem_id)
+        
+        # Get experience level guidance
+        experience_guidance = get_experience_guidance(experience_level)
 
         prompt = f"""
         You are an AI tutor helping users learn algorithmic problem-solving. Your role is to guide them towards the solution without revealing it directly.
@@ -85,7 +118,9 @@ def ai_chat(request):
         {terminal_output if terminal_output else "No output available"}
         ```
 
-        {EXPERIENCE_GUIDANCE[experience_level]}
+        {experience_guidance}
+
+        {problem_type_prompt}
 
         **General Guidance Protocol:**
         1. First, analyze the code and identify key issues or areas for improvement

@@ -1,0 +1,10 @@
+{
+    "python_basics": {
+        "hint_guidance": "These problems are typically carried out with very little tech and/or code literacy so make hints a lot more revealing or telling. Focus on explaining basic concepts clearly and provide more direct guidance.",
+        "additional_context": "For Python basics problems, prioritize clarity and simplicity in explanations. Break down concepts into very small, digestible pieces."
+    },
+    "problem_set": {
+        "hint_guidance": "",
+        "additional_context": ""
+    }
+} 

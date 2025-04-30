@@ -5,11 +5,13 @@ from .views import (
     update_progress, 
     get_question_description, 
     get_question_boilerplate,
-    get_submissions
+    get_submissions,
+    get_problem_types
 )
 
 urlpatterns = [
     path('list/', get_problems, name='get_problems'),
+    path('types/', get_problem_types, name='get_problem_types'),
     path('<int:problem_id>/', get_problem_details, name='get_problem_details'),
     path('<int:problem_id>/update/', update_progress, name='update_progress'),
     path('<int:problem_id>/description/', get_question_description, name='get_description'),

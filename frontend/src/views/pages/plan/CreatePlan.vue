@@ -85,7 +85,7 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue';
+import { ref, reactive, onBeforeMount } from 'vue';
 import { useRouter } from 'vue-router';
 import InputText from 'primevue/inputtext';
 import Textarea from 'primevue/textarea';
@@ -98,6 +98,7 @@ import { useToast } from 'primevue/usetoast';
 const router = useRouter();
 const toast = useToast();
 const loading = ref(false);
+const topicOptions = ref([]);
 
 const form = reactive({
     name: '',
@@ -113,16 +114,34 @@ const difficultyOptions = [
     { label: 'Advanced', value: 'advanced' }
 ];
 
-const topicOptions = [
-    { label: 'Python Basics', value: 'python_basics' },
-    { label: 'Data Structures', value: 'data_structures' },
-    { label: 'Algorithms', value: 'algorithms' },
-    { label: 'Problem Solving', value: 'problem_solving' },
-    { label: 'Object-Oriented Programming', value: 'oop' },
-    { label: 'Web Development', value: 'web_dev' },
-    { label: 'Database', value: 'database' },
-    { label: 'Testing', value: 'testing' }
-];
+const fetchProblemTypes = async () => {
+    try {
+        const response = await fetch('http://localhost:8000/problems/types/', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json' },
+            credentials: 'include'
+        });
+
+        if (!response.ok) throw new Error(`Error: ${response.status}`);
+
+        const types = await response.json();
+        topicOptions.value = types.map(type => ({
+            label: type.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '),
+            value: type
+        }));
+    } catch (err) {
+        toast.add({
+            severity: 'error',
+            summary: 'Error',
+            detail: 'Failed to fetch problem types: ' + err.message,
+            life: 3000
+        });
+    }
+};
+
+onBeforeMount(() => {
+    fetchProblemTypes();
+});
 
 const submitForm = async () => {
     if (!form.name || !form.duration_days || !form.difficulty || form.topics.length === 0) {

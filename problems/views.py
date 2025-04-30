@@ -151,3 +151,11 @@ def get_submissions(request, problem_id):
         problem_id=problem_id
     ).values('id', 'status', 'language', 'created_at', 'code_submitted')
     return JsonResponse(list(submissions), safe=False)
+
+@require_http_methods(["GET"])
+def get_problem_types(request):
+    """
+    Returns a list of unique problem types from the database.
+    """
+    problem_types = Problem.objects.values_list('problem_type', flat=True).distinct()
+    return JsonResponse(list(problem_types), safe=False)
