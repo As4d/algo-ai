@@ -12,6 +12,16 @@ from .models import LeaderboardEntry
 def get_leaderboard(request):
     """
     Returns the current leaderboard, sorted by total problems solved.
+    
+    Args:
+        request (HttpRequest): The HTTP request object.
+        
+    Returns:
+        JsonResponse: A JSON response containing:
+            - entries (list): List of leaderboard entries, each containing:
+                - user__username (str): Username of the user
+                - total_solved (int): Total number of problems solved
+                - last_updated (datetime): Last update timestamp
     """
     entries = LeaderboardEntry.objects.order_by('-total_solved')[:50]
     
@@ -29,6 +39,14 @@ def get_leaderboard(request):
 def get_user_stats(request):
     """
     Returns the current user's leaderboard stats.
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing the authenticated user.
+        
+    Returns:
+        JsonResponse: A JSON response containing:
+            - total_solved (int): Total number of problems solved by the user
+            - last_updated (datetime): Last update timestamp, or None if no entry exists
     """
     try:
         entry = LeaderboardEntry.objects.get(user=request.user)
