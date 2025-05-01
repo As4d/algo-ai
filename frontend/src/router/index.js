@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router';
 // import require auth
 import { requireAuth, redirectIfAuthenticated } from '@/router/guards';
 import CodeLayout from '@/codeLayout/CodeLayout.vue';
+import SubmissionHistory from '../components/SubmissionHistory.vue'
 
 const router = createRouter({
     history: createWebHistory(),
@@ -89,6 +90,12 @@ const router = createRouter({
             children: [
 
             ]
+        },
+        {
+            path: '/problems/:id/submissions',
+            name: 'submission-history',
+            component: SubmissionHistory,
+            props: true
         },
         {
             path: '/plans',

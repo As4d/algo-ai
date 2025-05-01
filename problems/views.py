@@ -159,3 +159,35 @@ def get_problem_types(request):
     """
     problem_types = Problem.objects.values_list('problem_type', flat=True).distinct()
     return JsonResponse(list(problem_types), safe=False)
+
+@login_required
+def get_last_submission(request, problem_id):
+    """
+    Get the last submission for a specific problem by the current user.
+    Returns the most recent submission regardless of its status (completed or attempted).
+    """
+    try:
+        # Get the most recent submission for this problem by the current user
+        # regardless of its status (completed or attempted)
+        last_submission = Submission.objects.filter(
+            user=request.user,
+            problem_id=problem_id
+        ).order_by('-created_at').first()
+
+        if not last_submission:
+            return JsonResponse(
+                {"error": "No previous submission found"},
+                status=404
+            )
+
+        return JsonResponse({
+            "code_submitted": last_submission.code_submitted,
+            "status": last_submission.status,
+            "created_at": last_submission.created_at.isoformat()
+        })
+
+    except Exception as e:
+        return JsonResponse(
+            {"error": str(e)},
+            status=500
+        )

@@ -12,6 +12,8 @@
             <div class="p-2 bg-gray-200 dark:bg-gray-900 flex justify-between items-center">
                 <span class="text-lg font-semibold">Python Code Editor</span>
                 <div class="flex gap-2">
+                    <button @click="loadLastSubmission" class="bg-purple-500 text-white px-4 py-2 rounded-lg">Load Last Submission</button>
+                    <button @click="viewHistory" class="bg-indigo-500 text-white px-4 py-2 rounded-lg">View History</button>
                     <button @click="runCode(false)" class="bg-blue-500 text-white px-4 py-2 rounded-lg">Run Code</button>
                     <button @click="runCode(true)" class="bg-green-500 text-white px-4 py-2 rounded-lg">Run Tests</button>
                 </div>
@@ -19,16 +21,20 @@
             <div ref="editorContainer" class="flex-1 min-h-0 overflow-hidden"></div>
             <div class="bg-gray-100 dark:bg-gray-800">
                 <div class="p-2">
+                    <!-- Resize Handle -->
+                    <div class="h-1 bg-gray-300 dark:bg-gray-700 cursor-row-resize hover:bg-blue-500 transition-colors" 
+                         @mousedown="startResize"></div>
+                    
                     <!-- Output Section - Only show when not displaying test results -->
-                    <div v-if="testResults.length === 0">
+                    <div v-if="testResults.length === 0" :style="{ height: outputHeight + 'px' }" class="overflow-hidden">
                         <h2 class="text-md font-semibold mb-2">Output</h2>
-                        <pre class="bg-gray-200 dark:bg-gray-900 p-3 rounded-md whitespace-pre-wrap h-32 overflow-y-auto font-mono text-sm">{{ output }}</pre>
+                        <pre class="bg-gray-200 dark:bg-gray-900 p-3 rounded-md whitespace-pre-wrap h-full overflow-y-auto font-mono text-sm">{{ output }}</pre>
                     </div>
 
                     <!-- Test Results Section -->
-                    <div v-if="testResults.length > 0">
+                    <div v-if="testResults.length > 0" :style="{ height: outputHeight + 'px' }" class="overflow-hidden">
                         <h2 class="text-md font-semibold mb-2">Test Results</h2>
-                        <div class="max-h-[300px] overflow-y-auto">
+                        <div class="h-full overflow-y-auto">
                             <div v-for="(result, index) in testResults" :key="index" class="mb-2 p-2 rounded-md" :class="result.passed ? 'bg-green-100 dark:bg-green-900' : 'bg-red-100 dark:bg-red-900'">
                                 <div class="flex justify-between items-center">
                                     <span class="font-medium">Test {{ index + 1 }}: {{ result.test_name }}</span>
@@ -90,7 +96,9 @@ export default {
             editorView: null,
             testResults: [],
             startTime: null,
-            timeSpent: 0
+            timeSpent: 0,
+            outputHeight: 150, // Default height for output panel
+            isResizing: false
         };
     },
     computed: {
@@ -169,14 +177,44 @@ export default {
 
         updateEditorContent(newContent) {
             if (this.editorView) {
-                const transaction = this.editorView.state.update({
-                    changes: {
-                        from: 0,
-                        to: this.editorView.state.doc.length,
-                        insert: newContent
-                    }
+                // Destroy the current editor view
+                this.editorView.destroy();
+                
+                // Create a new editor state with the new content
+                const state = EditorState.create({
+                    doc: newContent,
+                    extensions: [
+                        basicSetup,
+                        python(),
+                        oneDark,
+                        EditorView.updateListener.of((update) => {
+                            if (update.docChanged) {
+                                this.code = update.state.doc.toString();
+                            }
+                        }),
+                        EditorView.theme({
+                            '&': {
+                                height: '100%',
+                                minHeight: '100px'
+                            },
+                            '.cm-scroller': {
+                                lineHeight: '1.6'
+                            },
+                            '.cm-content': {
+                                padding: '10px 0'
+                            }
+                        })
+                    ]
                 });
-                this.editorView.dispatch(transaction);
+
+                // Create a new editor view
+                this.editorView = new EditorView({
+                    state: state,
+                    parent: this.$refs.editorContainer
+                });
+
+                // Update the local state
+                this.code = newContent;
             }
         },
 
@@ -316,6 +354,69 @@ export default {
                 console.error('Failed to fetch AI hint:', error);
                 this.aiHint = 'Hint generation failed.';
             }
+        },
+
+        startResize(e) {
+            this.isResizing = true;
+            const startY = e.clientY;
+            const startHeight = this.outputHeight;
+            
+            const doResize = (e) => {
+                if (!this.isResizing) return;
+                const delta = startY - e.clientY;
+                this.outputHeight = Math.max(50, Math.min(500, startHeight + delta));
+            };
+            
+            const stopResize = () => {
+                this.isResizing = false;
+                document.removeEventListener('mousemove', doResize);
+                document.removeEventListener('mouseup', stopResize);
+            };
+            
+            document.addEventListener('mousemove', doResize);
+            document.addEventListener('mouseup', stopResize);
+        },
+
+        async loadLastSubmission() {
+            const problemId = this.$route.params.id;
+            const apiUrl = 'http://localhost:8000';
+
+            try {
+                const response = await fetch(`${apiUrl}/problems/${problemId}/last_submission/`, {
+                    method: 'GET',
+                    headers: { 
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include'
+                });
+
+                const data = await response.json();
+
+                if (response.status === 404) {
+                    this.output = "No previous submission found for this problem.";
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error(data.error || `Error: ${response.status}`);
+                }
+
+                if (!data.code_submitted) {
+                    throw new Error("No code found in the submission");
+                }
+
+                this.code = data.code_submitted;
+                this.updateEditorContent(this.code);
+                this.output = `Last submission loaded successfully! (Status: ${data.status}, Submitted: ${data.created_at})`;
+            } catch (error) {
+                console.error('Failed to load last submission:', error);
+                this.output = error.message || 'Failed to load last submission';
+            }
+        },
+
+        viewHistory() {
+            this.$router.push(`/problems/${this.$route.params.id}/submissions`);
         }
     }
 };

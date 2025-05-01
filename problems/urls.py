@@ -6,7 +6,8 @@ from .views import (
     get_question_description, 
     get_question_boilerplate,
     get_submissions,
-    get_problem_types
+    get_problem_types,
+    get_last_submission
 )
 
 urlpatterns = [
@@ -17,4 +18,5 @@ urlpatterns = [
     path('<int:problem_id>/description/', get_question_description, name='get_description'),
     path('<int:problem_id>/boilerplate/', get_question_boilerplate, name='get_boilerplate'),
     path('<int:problem_id>/submissions/', get_submissions, name='get_submissions'),
+    path('<int:problem_id>/last_submission/', get_last_submission, name='last_submission'),
 ]

@@ -279,7 +279,7 @@ def execute_code(request):
         if not run_tests:
             if 'input(' in user_code:
                 return JsonResponse({
-                    "error": "input() is not supported when running code directly. Tip: Hardcode your input values in your code for testing, e.g., a = 3 instead of a = int(input())."
+                    "error": "input() is not supported when running code directly. Here's how to test your code:\n\n1. DO NOT modify any code above the '# Write your code here' line\n2. To test locally, you can comment out the input() line by adding a # at the start of the line\n   - You can quickly comment/uncomment using Ctrl+/ (Windows/Linux) or Cmd+/ (Mac)\n3. Replace input() with hardcoded values, for example:\n   - Instead of: a = int(input())\n   - Use: a = 3  # Replace 3 with your test value\n\nRemember to remove the comments and restore input() before submitting your final solution!"
                 })
             result = run_code_with_test(user_code)
             if result["success"]:
