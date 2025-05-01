@@ -21,40 +21,6 @@ with open(os.path.join(os.path.dirname(__file__), 'prompt_building_blocks', 'pro
 with open(os.path.join(os.path.dirname(__file__), 'prompt_building_blocks', 'experience_guidance.json'), 'r') as f:
     EXPERIENCE_GUIDANCE = json.load(f)
 
-def sanitise_code(code):
-    """
-    Sanitise user code to prevent XSS and other injection attacks.
-    
-    Args:
-        code (str): The user's code to sanitise
-        
-    Returns:
-        str: Sanitised code
-    """
-    # Remove any HTML tags
-    code = re.sub(r'<[^>]+>', '', code)
-    # Escape HTML special characters
-    code = html.escape(code)
-    # Remove any potential command injection attempts
-    code = re.sub(r'[;&|`]', '', code)
-    return code
-
-def sanitise_text(text):
-    """
-    Sanitise text input to prevent XSS attacks.
-    
-    Args:
-        text (str): The text to sanitise
-        
-    Returns:
-        str: Sanitised text
-    """
-    # Remove any HTML tags
-    text = re.sub(r'<[^>]+>', '', text)
-    # Escape HTML special characters
-    text = html.escape(text)
-    return text
-
 def get_problem_type_prompt(problem_id):
     """
     Get the problem type specific prompt based on the problem ID.
@@ -112,9 +78,9 @@ def ai_chat(request):
 
     try:
         data = json.loads(request.body.decode("utf-8"))
-        user_code = sanitise_code(data.get("code", "").strip())
-        terminal_output = sanitise_text(data.get("terminal", "").strip())
-        problem_description = sanitise_text(data.get("question", "").strip())
+        user_code = data.get("code", "").strip()
+        terminal_output = data.get("terminal", "").strip()
+        problem_description = data.get("question", "").strip()
         problem_id = data.get("problem_id")
 
         if not user_code or not problem_description:

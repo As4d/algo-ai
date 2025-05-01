@@ -17,6 +17,12 @@
                     <div>
                         <h1 class="text-2xl font-semibold" style="color: var(--text-color)">{{ plan.name }}</h1>
                         <p style="color: var(--text-secondary-color)" class="mt-2">{{ plan.description }}</p>
+                        <div class="mt-2">
+                            <span class="text-sm" style="color: var(--text-secondary-color)">Problem Types: </span>
+                            <span v-for="type in plan.problem_types" :key="type" class="mr-2">
+                                <Chip :label="formatProblemType(type)" />
+                            </span>
+                        </div>
                     </div>
                     <div class="flex gap-2">
                         <Button 
@@ -272,6 +278,12 @@ const formatTopic = (topic) => {
 const formatExplanation = (explanation) => {
     // Remove markdown code blocks if present
     return explanation.replace(/```[^`]*```/g, '').trim();
+};
+
+const formatProblemType = (type) => {
+    return type.split('_').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
 };
 
 const toggleProblemStatus = async (problem) => {

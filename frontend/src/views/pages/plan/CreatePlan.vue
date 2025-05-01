@@ -4,6 +4,17 @@
         <p class="mb-6">Fill in the form below to generate a new plan.</p>
 
         <form @submit.prevent="submitForm" class="space-y-4">
+            <!-- Error Message -->
+            <div v-if="error" class="mb-4">
+                <Message severity="error" :closable="false" class="dark-error">
+                    <div class="text-white">{{ error }}</div>
+                    <div v-if="explanation" class="mt-2 p-3 rounded" style="background-color: var(--surface-card);">
+                        <div style="color: var(--text-color);" class="font-semibold mb-1">AI's Explanation:</div>
+                        <div style="color: var(--text-color);">{{ explanation }}</div>
+                    </div>
+                </Message>
+            </div>
+
             <!-- Plan Name -->
             <div class="field">
                 <label for="name" class="block text-sm font-medium mb-2">Plan Name</label>
@@ -56,16 +67,20 @@
                 />
             </div>
 
-            <!-- Topics -->
+            <!-- Problem Types -->
             <div class="field">
-                <label class="block text-sm font-medium mb-2">Topics</label>
+                <label class="block text-sm font-medium mb-2">Problem Types</label>
+                <div class="mb-2 text-sm text-gray-600">
+                    <i class="pi pi-info-circle mr-1"></i>
+                    For the best learning experience, we recommend selecting all problem types. This will give you a comprehensive understanding of different problem-solving approaches.
+                </div>
                 <MultiSelect 
-                    v-model="form.topics" 
+                    v-model="form.problem_types" 
                     :options="topicOptions" 
                     optionLabel="label"
                     optionValue="value"
                     class="w-full"
-                    placeholder="Select topics"
+                    placeholder="Select problem types"
                     :filter="true"
                     required
                 />
@@ -93,11 +108,14 @@ import InputNumber from 'primevue/inputnumber';
 import Dropdown from 'primevue/dropdown';
 import MultiSelect from 'primevue/multiselect';
 import Button from 'primevue/button';
+import Message from 'primevue/message';
 import { useToast } from 'primevue/usetoast';
 
 const router = useRouter();
 const toast = useToast();
 const loading = ref(false);
+const error = ref(null);
+const explanation = ref(null);
 const topicOptions = ref([]);
 
 const form = reactive({
@@ -105,7 +123,7 @@ const form = reactive({
     description: '',
     duration_days: 7,
     difficulty: '',
-    topics: []
+    problem_types: []
 });
 
 const difficultyOptions = [
@@ -144,17 +162,15 @@ onBeforeMount(() => {
 });
 
 const submitForm = async () => {
-    if (!form.name || !form.duration_days || !form.difficulty || form.topics.length === 0) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: 'Please fill in all required fields',
-            life: 3000
-        });
+    if (!form.name || !form.duration_days || !form.difficulty || form.problem_types.length === 0) {
+        error.value = 'Please fill in all required fields';
+        explanation.value = null;
         return;
     }
 
     loading.value = true;
+    error.value = null;
+    explanation.value = null;
     try {
         const response = await fetch('http://localhost:8000/plan/create/', {
             method: 'POST',
@@ -167,8 +183,10 @@ const submitForm = async () => {
         });
 
         if (!response.ok) {
-            const error = await response.json();
-            throw new Error(error.error || 'Failed to create plan');
+            const errorData = await response.json();
+            error.value = errorData.error || 'Failed to create plan';
+            explanation.value = errorData.explanation || null;
+            return;
         }
 
         const data = await response.json();
@@ -176,18 +194,14 @@ const submitForm = async () => {
             severity: 'success',
             summary: 'Success',
             detail: 'Plan created successfully',
-            life: 3000
+            life: 5000
         });
         
         // Redirect to plan details page
         router.push(`/plan/${data.plan_id}`);
     } catch (error) {
-        toast.add({
-            severity: 'error',
-            summary: 'Error',
-            detail: error.message,
-            life: 3000
-        });
+        error.value = error.message;
+        explanation.value = null;
     } finally {
         loading.value = false;
     }
@@ -209,5 +223,15 @@ const submitForm = async () => {
 
 :deep(.p-multiselect) {
     @apply w-full;
+}
+
+:deep(.dark-error) {
+    background-color: #441111 !important;
+    color: #fff !important;
+    border: none !important;
+}
+
+:deep(.dark-error .p-message-icon) {
+    color: #fff !important;
 }
 </style>

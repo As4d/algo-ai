@@ -34,6 +34,11 @@
                             <div>
                                 <h3 class="text-lg font-semibold">{{ plan.name }}</h3>
                                 <p class="text-sm text-gray-600">{{ plan.description }}</p>
+                                <div class="mt-2">
+                                    <span v-for="type in plan.problem_types" :key="type" class="mr-2">
+                                        <Chip :label="formatProblemType(type)" size="small" />
+                                    </span>
+                                </div>
                             </div>
                             <div class="flex gap-2">
                                 <Button 
@@ -229,6 +234,12 @@ const formatDate = (dateString) => {
 
 const formatTopic = (topic) => {
     return topic.split('_').map(word => 
+        word.charAt(0).toUpperCase() + word.slice(1)
+    ).join(' ');
+};
+
+const formatProblemType = (type) => {
+    return type.split('_').map(word => 
         word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
 };

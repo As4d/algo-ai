@@ -13,7 +13,7 @@ class Plan(models.Model):
         ('intermediate', 'Intermediate'),
         ('advanced', 'Advanced')
     ])
-    topics = models.JSONField()  # Store list of topics as JSON
+    problem_types = models.JSONField()  # Store list of selected problem types as JSON
     created_at = models.DateTimeField(auto_now_add=True)
     is_active = models.BooleanField(default=True)
     problems = models.ManyToManyField(Problem, through='PlanProblem')

@@ -22,34 +22,6 @@ SITE_NAME = ""
 # At the top after imports
 logger = logging.getLogger(__name__)
 
-def sanitise_text(text):
-    """
-    Sanitise text input to prevent XSS attacks.
-    
-    Args:
-        text (str): The text to sanitise
-        
-    Returns:
-        str: Sanitised text
-    """
-    # Remove any HTML tags
-    text = re.sub(r'<[^>]+>', '', text)
-    # Escape HTML special characters
-    text = html.escape(text)
-    return text
-
-def sanitise_list(items):
-    """
-    Sanitise a list of items to prevent XSS attacks.
-    
-    Args:
-        items (list): The list of items to sanitise
-        
-    Returns:
-        list: Sanitised list of items
-    """
-    return [sanitise_text(str(item)) for item in items]
-
 @csrf_exempt
 @require_http_methods(["POST"])
 @login_required
@@ -63,7 +35,7 @@ def create_plan(request):
             - description (str): Description of the plan
             - duration_days (int): Duration of the plan in days
             - difficulty (str): Difficulty level of the plan
-            - topics (list): List of topics to cover
+            - problem_types (list): List of problem types to cover
             
     Returns:
         JsonResponse: A JSON response containing:
@@ -80,16 +52,16 @@ def create_plan(request):
         data = json.loads(request.body.decode("utf-8"))
         logger.info(f"Request data: {data}")
         
-        # Sanitise all user inputs
-        name = sanitise_text(data.get("name", "").strip())
-        description = sanitise_text(data.get("description", "").strip())
+        # Get user inputs
+        name = data.get("name", "").strip()
+        description = data.get("description", "").strip()
         duration_days = int(data.get("duration_days", 0))  # Convert to int for safety
-        difficulty = sanitise_text(data.get("difficulty", "").strip())
-        topics = sanitise_list(data.get("topics", []))
+        difficulty = data.get("difficulty", "").strip()
+        problem_types = data.get("problem_types", [])  # Changed from topics to problem_types
         
-        logger.info(f"Plan parameters: name={name}, duration={duration_days}, difficulty={difficulty}, topics={topics}")
+        logger.info(f"Plan parameters: name={name}, duration={duration_days}, difficulty={difficulty}, problem_types={problem_types}")
 
-        if not all([name, duration_days, difficulty, topics]):
+        if not all([name, duration_days, difficulty, problem_types]):
             logger.warning("Missing required fields in request")
             return JsonResponse({"error": "Missing required fields"}, status=400)
 
@@ -103,13 +75,20 @@ def create_plan(request):
             logger.error("User profile not found")
             return JsonResponse({"error": "User profile not found. Please complete your profile setup."}, status=404)
 
-        # Get all problems from the database
-        logger.info("Fetching problems from database")
-        problems = Problem.objects.all().values(
+        # Get problems from the database filtered by problem types
+        logger.info(f"Fetching problems from database for types: {problem_types}")
+        problems = Problem.objects.filter(problem_type__in=problem_types).values(
             'id', 'name', 'language', 'difficulty', 'problem_type', 'description'
         )
         problems_list = list(problems)
-        logger.info(f"Found {len(problems_list)} problems")
+        logger.info(f"Found {len(problems_list)} problems for selected types")
+
+        if not problems_list:
+            logger.warning(f"No problems found for types: {problem_types}")
+            return JsonResponse({
+                "error": "No problems available",
+                "reason": f"No problems found for the selected problem types: {', '.join(problem_types)}"
+            }, status=400)
 
         # Create prompt for AI
         logger.info("Creating AI prompt")
@@ -123,31 +102,36 @@ def create_plan(request):
         - Name: {name}
         - Description: {description}
         - Duration: {duration_days} days
-        - Difficulty Level: {difficulty}
-        - Topics: {', '.join(topics)}
+        - Target Difficulty Level: {difficulty} (This is a general guideline - you can include a mix of problems with different difficulties)
+        - Problem Types: {', '.join(problem_types)}
 
         **Available Problems:**
         {json.dumps(problems_list, indent=2)}
 
         Create a structured learning plan that:
         1. Matches the user's experience level and background
-        2. Covers the requested topics
+        2. Uses a mix of the selected problem types
         3. Fits within the specified duration
-        4. Progresses in difficulty appropriately
-        5. Includes a mix of problem types
+        4. Aims for an AVERAGE difficulty of {difficulty}, but can include:
+           - For 'beginner' plans: mostly easy problems with some intermediate ones
+           - For 'intermediate' plans: a mix of easy, intermediate, and some hard problems
+           - For 'advanced' plans: mostly hard problems with some intermediate ones
+        5. ONLY uses problems from the selected types: {', '.join(problem_types)}
 
-        Provide your response in two parts:
-        1. First, provide a brief explanation of your reasoning for the plan structure.
-        2. Then, provide a JSON array of problem IDs in the order they should be completed.
-
-        If a suitable plan is not possible with the available problems, explain why and suggest alternatives.
+        IMPORTANT: You MUST respond in the following format:
+        1. First, provide a brief explanation of your plan.
+        2. Then on a new line, provide ONLY a JSON array of problem IDs like this: [1, 2, 3]
+        3. Do not include any other text or formatting after the JSON array.
 
         Example response format:
-        ```
-        I've created a plan that focuses on your Python basics and data structures topics. Since you're a beginner, I've started with simpler problems and gradually increased the difficulty. The problems are spread over 7 days to match your requested duration.
+        I've created a plan that combines problems from your selected types ({', '.join(problem_types)}), with an average difficulty suitable for {difficulty} level learners. The problems progress in difficulty and are spread over {duration_days} days.
 
-        [1, 5, 8, 12, 15, 20, 25]
-        ```
+        [1, 5, 8, 12, 15]
+
+        If you cannot create a suitable plan with the available problems, respond with:
+        I cannot create a suitable plan because [reason].
+
+        []
         """
 
         headers = {
@@ -158,7 +142,7 @@ def create_plan(request):
         }
         payload = {
             "model": "deepseek/deepseek-r1:free",
-            "messages": [{"role": "user", "content": prompt}],
+            "messages": [{"role": "user", "content": prompt}]
         }
 
         logger.info("Sending request to OpenRouter API")
@@ -183,25 +167,30 @@ def create_plan(request):
             logger.info(f"AI response content: {ai_response}")
             
             # Extract explanation and problem_order from AI response
-            explanation = ""
-            problem_order_str = ""
-            
-            # Look for a JSON array in the response
-            import re
-            json_pattern = r'\[\s*\d+(?:\s*,\s*\d+)*\s*\]'
-            match = re.search(json_pattern, ai_response)
-            
-            if match:
-                problem_order_str = match.group(0)
-                explanation = ai_response.replace(problem_order_str, "").strip()
-                logger.info(f"Extracted explanation: {explanation}")
-                logger.info(f"Extracted problem_order_str: {problem_order_str}")
+            # Split the response at the last newline to separate explanation from JSON array
+            parts = ai_response.rsplit('\n', 1)
+            if len(parts) == 2:
+                explanation = parts[0].strip()
+                problem_order_str = parts[1].strip()
             else:
-                logger.warning("No JSON array found in AI response")
                 explanation = ai_response
                 problem_order_str = "[]"
+
+            logger.info(f"Extracted explanation: {explanation}")
+            logger.info(f"Extracted problem_order_str: {problem_order_str}")
             
             try:
+                # Clean up the problem_order_str to ensure it's valid JSON
+                problem_order_str = problem_order_str.strip('`').strip()
+                if not problem_order_str.startswith('['):
+                    # Try to find array in the string
+                    import re
+                    match = re.search(r'\[(.*?)\]', problem_order_str)
+                    if match:
+                        problem_order_str = match.group(0)
+                    else:
+                        problem_order_str = "[]"
+
                 problem_order = json.loads(problem_order_str)
                 logger.info(f"Parsed problem_order: {problem_order}")
                 
@@ -209,9 +198,27 @@ def create_plan(request):
                     logger.warning("Empty problem_order, plan creation not possible")
                     return JsonResponse({
                         "error": "Could not create plan",
-                        "reason": explanation
+                        "reason": "The AI was unable to generate a suitable problem sequence. Please try again with different parameters.",
+                        "explanation": explanation
                     }, status=400)
                 
+                # Verify all problems exist and are of correct type
+                valid_problems = []
+                for problem_id in problem_order:
+                    try:
+                        problem = Problem.objects.get(id=problem_id, problem_type__in=problem_types)
+                        valid_problems.append(problem_id)
+                    except Problem.DoesNotExist:
+                        logger.warning(f"Problem {problem_id} not found or wrong type")
+                        continue
+
+                if not valid_problems:
+                    logger.error("No valid problems found")
+                    return JsonResponse({
+                        "error": "Could not create plan",
+                        "reason": "None of the suggested problems are available. Please try again."
+                    }, status=400)
+
                 # Create the plan
                 logger.info("Creating plan in database")
                 plan = Plan.objects.create(
@@ -220,35 +227,21 @@ def create_plan(request):
                     description=description,
                     duration_days=duration_days,
                     difficulty=difficulty,
-                    topics=topics,
-                    ai_explanation=explanation  # Store the explanation
+                    problem_types=problem_types,
+                    ai_explanation=explanation
                 )
                 logger.info(f"Created plan with ID: {plan.id}")
 
                 # Add problems to the plan in the specified order
                 logger.info("Adding problems to plan")
-                valid_problems = []
-                
-                for order, problem_id in enumerate(problem_order, start=1):
-                    try:
-                        problem = Problem.objects.get(id=problem_id)
-                        PlanProblem.objects.create(
-                            plan=plan,
-                            problem=problem,
-                            order=order
-                        )
-                        valid_problems.append(problem_id)
-                        logger.info(f"Added problem {problem_id} to plan with order {order}")
-                    except Problem.DoesNotExist:
-                        logger.warning(f"Problem with ID {problem_id} does not exist")
-                
-                if not valid_problems:
-                    logger.error("No valid problems found, deleting plan")
-                    plan.delete()
-                    return JsonResponse({
-                        "error": "Could not create plan with valid problems", 
-                        "reason": "None of the suggested problems exist in the database"
-                    }, status=400)
+                for order, problem_id in enumerate(valid_problems, start=1):
+                    problem = Problem.objects.get(id=problem_id)
+                    PlanProblem.objects.create(
+                        plan=plan,
+                        problem=problem,
+                        order=order
+                    )
+                    logger.info(f"Added problem {problem_id} to plan with order {order}")
 
                 return JsonResponse({
                     "message": "Plan created successfully",
@@ -260,7 +253,7 @@ def create_plan(request):
                 logger.error(f"JSON decode error for problem_order: {str(e)}")
                 return JsonResponse({
                     "error": "Error parsing problem list from AI response",
-                    "reason": explanation
+                    "reason": "The AI response was not in the expected format. Please try again."
                 }, status=400)
 
         except (json.JSONDecodeError, IndexError, KeyError) as e:
@@ -303,7 +296,7 @@ def list_plans(request):
     """
     plans = Plan.objects.filter(user=request.user).values(
         'id', 'name', 'description', 'duration_days', 'difficulty',
-        'topics', 'created_at', 'is_active'
+        'problem_types', 'created_at', 'is_active'
     )
     
     plans_list = list(plans)
@@ -362,10 +355,10 @@ def get_plan_details(request, plan_id):
         for plan_problem in plan_problems:
             problems.append({
                 'id': plan_problem.problem.id,
-                'name': sanitise_text(plan_problem.problem.name),
-                'language': sanitise_text(plan_problem.problem.language),
-                'difficulty': sanitise_text(plan_problem.problem.difficulty),
-                'problem_type': sanitise_text(plan_problem.problem.problem_type),
+                'name': plan_problem.problem.name,
+                'language': plan_problem.problem.language,
+                'difficulty': plan_problem.problem.difficulty,
+                'problem_type': plan_problem.problem.problem_type,
                 'order': plan_problem.order,
                 'is_completed': plan_problem.is_completed,
                 'completed_at': plan_problem.completed_at
@@ -378,11 +371,11 @@ def get_plan_details(request, plan_id):
         
         return JsonResponse({
             'id': plan.id,
-            'name': sanitise_text(plan.name),
-            'description': sanitise_text(plan.description),
+            'name': plan.name,
+            'description': plan.description,
             'duration_days': plan.duration_days,
-            'difficulty': sanitise_text(plan.difficulty),
-            'topics': sanitise_list(plan.topics),
+            'difficulty': plan.difficulty,
+            'problem_types': plan.problem_types,
             'created_at': plan.created_at,
             'is_active': plan.is_active,
             'problems': problems,
@@ -391,7 +384,7 @@ def get_plan_details(request, plan_id):
                 'completed': completed_problems,
                 'percentage': round(percentage, 2)
             },
-            'ai_explanation': sanitise_text(plan.ai_explanation),
+            'ai_explanation': plan.ai_explanation,
             'is_completed': (completed_problems == total_problems) and total_problems > 0
         })
     except Plan.DoesNotExist:
