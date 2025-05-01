@@ -24,7 +24,27 @@ logger = logging.getLogger(__name__)
 @require_http_methods(["POST"])
 @login_required
 def create_plan(request):
-    """Create a new learning plan based on user preferences."""
+    """
+    Create a new learning plan based on user preferences.
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing:
+            - name (str): Name of the plan
+            - description (str): Description of the plan
+            - duration_days (int): Duration of the plan in days
+            - difficulty (str): Difficulty level of the plan
+            - topics (list): List of topics to cover
+            
+    Returns:
+        JsonResponse: A JSON response containing:
+            - On success:
+                - message (str): Success message
+                - plan_id (int): ID of the created plan
+                - explanation (str): AI's explanation of the plan
+            - On error:
+                - error (str): Error message
+                - reason (str, optional): Additional error details
+    """
     try:
         logger.info("Starting create_plan function")
         data = json.loads(request.body.decode("utf-8"))
@@ -228,7 +248,28 @@ def create_plan(request):
 @require_http_methods(["GET"])
 @login_required
 def list_plans(request):
-    """List all plans for the current user."""
+    """
+    List all plans for the current user.
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing the authenticated user.
+        
+    Returns:
+        JsonResponse: A JSON response containing a list of plans, where each plan contains:
+            - id (int): Plan ID
+            - name (str): Plan name
+            - description (str): Plan description
+            - duration_days (int): Plan duration in days
+            - difficulty (str): Plan difficulty level
+            - topics (list): List of topics
+            - created_at (datetime): Creation timestamp
+            - is_active (bool): Whether the plan is active
+            - progress (dict): Progress information containing:
+                - total (int): Total number of problems
+                - completed (int): Number of completed problems
+                - percentage (float): Completion percentage
+            - is_completed (bool): Whether all problems are completed
+    """
     plans = Plan.objects.filter(user=request.user).values(
         'id', 'name', 'description', 'duration_days', 'difficulty',
         'topics', 'created_at', 'is_active'
@@ -257,7 +298,31 @@ def list_plans(request):
 @require_http_methods(["GET"])
 @login_required
 def get_plan_details(request, plan_id):
-    """Get detailed information about a specific plan."""
+    """
+    Get detailed information about a specific plan.
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing the authenticated user.
+        plan_id (int): The ID of the plan to retrieve details for.
+        
+    Returns:
+        JsonResponse: A JSON response containing:
+            - On success:
+                - id (int): Plan ID
+                - name (str): Plan name
+                - description (str): Plan description
+                - duration_days (int): Plan duration in days
+                - difficulty (str): Plan difficulty level
+                - topics (list): List of topics
+                - created_at (datetime): Creation timestamp
+                - is_active (bool): Whether the plan is active
+                - problems (list): List of problems in the plan
+                - progress (dict): Progress information
+                - ai_explanation (str): AI's explanation of the plan
+                - is_completed (bool): Whether all problems are completed
+            - On error:
+                - error (str): Error message
+    """
     try:
         plan = Plan.objects.get(id=plan_id, user=request.user)
         plan_problems = PlanProblem.objects.filter(plan=plan).select_related('problem').order_by('order')
@@ -305,7 +370,22 @@ def get_plan_details(request, plan_id):
 @require_http_methods(["POST"])
 @login_required
 def update_problem_status(request, plan_id, problem_id):
-    """Update the completion status of a problem in a plan."""
+    """
+    Update the completion status of a problem in a plan.
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing:
+            - is_completed (bool): New completion status
+        plan_id (int): The ID of the plan
+        problem_id (int): The ID of the problem to update
+        
+    Returns:
+        JsonResponse: A JSON response containing:
+            - On success:
+                - message (str): Success message
+            - On error:
+                - error (str): Error message
+    """
     try:
         data = json.loads(request.body.decode("utf-8"))
         is_completed = data.get("is_completed", False)
@@ -332,7 +412,20 @@ def update_problem_status(request, plan_id, problem_id):
 @require_http_methods(["DELETE"])
 @login_required
 def delete_plan(request, plan_id):
-    """Delete a plan."""
+    """
+    Delete a plan.
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing the authenticated user.
+        plan_id (int): The ID of the plan to delete.
+        
+    Returns:
+        JsonResponse: A JSON response containing:
+            - On success:
+                - message (str): Success message
+            - On error:
+                - error (str): Error message
+    """
     try:
         plan = Plan.objects.get(id=plan_id, user=request.user)
         plan.delete()
