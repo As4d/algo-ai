@@ -1,6 +1,8 @@
 import json
 import requests
 import os
+import html
+import re
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from accounts.models import Profile
@@ -18,6 +20,40 @@ with open(os.path.join(os.path.dirname(__file__), 'prompt_building_blocks', 'pro
 # Load experience guidance
 with open(os.path.join(os.path.dirname(__file__), 'prompt_building_blocks', 'experience_guidance.json'), 'r') as f:
     EXPERIENCE_GUIDANCE = json.load(f)
+
+def sanitize_code(code):
+    """
+    Sanitize user code to prevent XSS and other injection attacks.
+    
+    Args:
+        code (str): The user's code to sanitize
+        
+    Returns:
+        str: Sanitized code
+    """
+    # Remove any HTML tags
+    code = re.sub(r'<[^>]+>', '', code)
+    # Escape HTML special characters
+    code = html.escape(code)
+    # Remove any potential command injection attempts
+    code = re.sub(r'[;&|`]', '', code)
+    return code
+
+def sanitize_text(text):
+    """
+    Sanitize text input to prevent XSS attacks.
+    
+    Args:
+        text (str): The text to sanitize
+        
+    Returns:
+        str: Sanitized text
+    """
+    # Remove any HTML tags
+    text = re.sub(r'<[^>]+>', '', text)
+    # Escape HTML special characters
+    text = html.escape(text)
+    return text
 
 def get_problem_type_prompt(problem_id):
     """
@@ -76,9 +112,9 @@ def ai_chat(request):
 
     try:
         data = json.loads(request.body.decode("utf-8"))
-        user_code = data.get("code", "").strip()
-        terminal_output = data.get("terminal", "").strip()
-        problem_description = data.get("question", "").strip()
+        user_code = sanitize_code(data.get("code", "").strip())
+        terminal_output = sanitize_text(data.get("terminal", "").strip())
+        problem_description = sanitize_text(data.get("question", "").strip())
         problem_id = data.get("problem_id")
 
         if not user_code or not problem_description:
