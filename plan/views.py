@@ -2,6 +2,8 @@ from django.shortcuts import render
 import json
 import requests
 import os
+import html
+import re
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_http_methods
@@ -19,6 +21,34 @@ SITE_NAME = ""
 
 # At the top after imports
 logger = logging.getLogger(__name__)
+
+def sanitise_text(text):
+    """
+    Sanitise text input to prevent XSS attacks.
+    
+    Args:
+        text (str): The text to sanitise
+        
+    Returns:
+        str: Sanitised text
+    """
+    # Remove any HTML tags
+    text = re.sub(r'<[^>]+>', '', text)
+    # Escape HTML special characters
+    text = html.escape(text)
+    return text
+
+def sanitise_list(items):
+    """
+    Sanitise a list of items to prevent XSS attacks.
+    
+    Args:
+        items (list): The list of items to sanitise
+        
+    Returns:
+        list: Sanitised list of items
+    """
+    return [sanitise_text(str(item)) for item in items]
 
 @csrf_exempt
 @require_http_methods(["POST"])
@@ -50,11 +80,12 @@ def create_plan(request):
         data = json.loads(request.body.decode("utf-8"))
         logger.info(f"Request data: {data}")
         
-        name = data.get("name", "").strip()
-        description = data.get("description", "").strip()
-        duration_days = data.get("duration_days", 0)
-        difficulty = data.get("difficulty", "").strip()
-        topics = data.get("topics", [])
+        # Sanitise all user inputs
+        name = sanitise_text(data.get("name", "").strip())
+        description = sanitise_text(data.get("description", "").strip())
+        duration_days = int(data.get("duration_days", 0))  # Convert to int for safety
+        difficulty = sanitise_text(data.get("difficulty", "").strip())
+        topics = sanitise_list(data.get("topics", []))
         
         logger.info(f"Plan parameters: name={name}, duration={duration_days}, difficulty={difficulty}, topics={topics}")
 
@@ -331,10 +362,10 @@ def get_plan_details(request, plan_id):
         for plan_problem in plan_problems:
             problems.append({
                 'id': plan_problem.problem.id,
-                'name': plan_problem.problem.name,
-                'language': plan_problem.problem.language,
-                'difficulty': plan_problem.problem.difficulty,
-                'problem_type': plan_problem.problem.problem_type,
+                'name': sanitise_text(plan_problem.problem.name),
+                'language': sanitise_text(plan_problem.problem.language),
+                'difficulty': sanitise_text(plan_problem.problem.difficulty),
+                'problem_type': sanitise_text(plan_problem.problem.problem_type),
                 'order': plan_problem.order,
                 'is_completed': plan_problem.is_completed,
                 'completed_at': plan_problem.completed_at
@@ -347,11 +378,11 @@ def get_plan_details(request, plan_id):
         
         return JsonResponse({
             'id': plan.id,
-            'name': plan.name,
-            'description': plan.description,
+            'name': sanitise_text(plan.name),
+            'description': sanitise_text(plan.description),
             'duration_days': plan.duration_days,
-            'difficulty': plan.difficulty,
-            'topics': plan.topics,
+            'difficulty': sanitise_text(plan.difficulty),
+            'topics': sanitise_list(plan.topics),
             'created_at': plan.created_at,
             'is_active': plan.is_active,
             'problems': problems,
@@ -360,7 +391,7 @@ def get_plan_details(request, plan_id):
                 'completed': completed_problems,
                 'percentage': round(percentage, 2)
             },
-            'ai_explanation': plan.ai_explanation,
+            'ai_explanation': sanitise_text(plan.ai_explanation),
             'is_completed': (completed_problems == total_problems) and total_problems > 0
         })
     except Plan.DoesNotExist:
@@ -388,7 +419,7 @@ def update_problem_status(request, plan_id, problem_id):
     """
     try:
         data = json.loads(request.body.decode("utf-8"))
-        is_completed = data.get("is_completed", False)
+        is_completed = bool(data.get("is_completed", False))  # Convert to bool for safety
         
         plan_problem = PlanProblem.objects.get(
             plan_id=plan_id,

@@ -21,15 +21,15 @@ with open(os.path.join(os.path.dirname(__file__), 'prompt_building_blocks', 'pro
 with open(os.path.join(os.path.dirname(__file__), 'prompt_building_blocks', 'experience_guidance.json'), 'r') as f:
     EXPERIENCE_GUIDANCE = json.load(f)
 
-def sanitize_code(code):
+def sanitise_code(code):
     """
-    Sanitize user code to prevent XSS and other injection attacks.
+    Sanitise user code to prevent XSS and other injection attacks.
     
     Args:
-        code (str): The user's code to sanitize
+        code (str): The user's code to sanitise
         
     Returns:
-        str: Sanitized code
+        str: Sanitised code
     """
     # Remove any HTML tags
     code = re.sub(r'<[^>]+>', '', code)
@@ -39,15 +39,15 @@ def sanitize_code(code):
     code = re.sub(r'[;&|`]', '', code)
     return code
 
-def sanitize_text(text):
+def sanitise_text(text):
     """
-    Sanitize text input to prevent XSS attacks.
+    Sanitise text input to prevent XSS attacks.
     
     Args:
-        text (str): The text to sanitize
+        text (str): The text to sanitise
         
     Returns:
-        str: Sanitized text
+        str: Sanitised text
     """
     # Remove any HTML tags
     text = re.sub(r'<[^>]+>', '', text)
@@ -112,9 +112,9 @@ def ai_chat(request):
 
     try:
         data = json.loads(request.body.decode("utf-8"))
-        user_code = sanitize_code(data.get("code", "").strip())
-        terminal_output = sanitize_text(data.get("terminal", "").strip())
-        problem_description = sanitize_text(data.get("question", "").strip())
+        user_code = sanitise_code(data.get("code", "").strip())
+        terminal_output = sanitise_text(data.get("terminal", "").strip())
+        problem_description = sanitise_text(data.get("question", "").strip())
         problem_id = data.get("problem_id")
 
         if not user_code or not problem_description:
@@ -159,13 +159,13 @@ def ai_chat(request):
         {problem_type_prompt}
 
         **General Guidance Protocol:**
-        1. First, analyze the code and identify key issues or areas for improvement
+        1. First, analyse the code and identify key issues or areas for improvement
         2. Instead of providing solutions:
            - Ask leading questions
            - Point out specific areas to think about
            - Provide small hints about concepts they should consider
         3. If the code is on the right track:
-           - Suggest optimizations through questions
+           - Suggest optimisations through questions
            - Help them think about edge cases
            - Guide them towards better practices
 
@@ -183,7 +183,7 @@ def ai_chat(request):
            - Explain how input is provided to their function
            - Clarify expected output format
            - Point out common input/output mismatches
-        2. Guide them to analyze test failures:
+        2. Guide them to analyse test failures:
            - Compare their output with expected output
            - Look for edge cases they might have missed
            - Check for type mismatches (string vs int, etc.)
@@ -201,7 +201,7 @@ def ai_chat(request):
         1. Code Analysis (what's working/what needs attention)
         2. Guiding Questions
         3. Conceptual Hints (if needed)
-        4. Optimization Suggestions (if applicable)
+        4. Optimisation Suggestions (if applicable)
         5. Test Case Guidance (if relevant)
         """
 

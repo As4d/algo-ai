@@ -248,35 +248,24 @@ def get_last_submission(request, problem_id):
         
     Returns:
         JsonResponse: A JSON response containing:
-            - On success:
-                - code_submitted (str): Submitted code
-                - status (str): Submission status
-                - created_at (str): ISO formatted submission timestamp
-            - On error:
-                - error (str): Error message
+            - id (int): Submission ID
+            - status (str): Submission status ('completed' or 'attempted')
+            - language (str): Programming language used
+            - created_at (datetime): Submission timestamp
+            - code_submitted (str): Submitted code
     """
-    try:
-        # Get the most recent submission for this problem by the current user
-        # regardless of its status (completed or attempted)
-        last_submission = Submission.objects.filter(
-            user=request.user,
-            problem_id=problem_id
-        ).order_by('-created_at').first()
-
-        if not last_submission:
-            return JsonResponse(
-                {"error": "No previous submission found"},
-                status=404
-            )
-
+    submission = Submission.objects.filter(
+        user=request.user,
+        problem_id=problem_id
+    ).order_by('-created_at').first()
+    
+    if submission:
         return JsonResponse({
-            "code_submitted": last_submission.code_submitted,
-            "status": last_submission.status,
-            "created_at": last_submission.created_at.isoformat()
+            'id': submission.id,
+            'status': submission.status,
+            'language': submission.language,
+            'created_at': submission.created_at,
+            'code_submitted': submission.code_submitted
         })
-
-    except Exception as e:
-        return JsonResponse(
-            {"error": str(e)},
-            status=500
-        )
+    else:
+        return JsonResponse({'error': 'No submission found'}, status=404)

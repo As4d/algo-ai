@@ -138,7 +138,7 @@ def compare_outputs(expected, actual):
         actual (str): Actual output from code execution.
     
     Returns:
-        bool: True if outputs match after normalization.
+        bool: True if outputs match after normalisation.
     """
     expected = expected.strip().replace('\r\n', '\n')
     actual = actual.strip().replace('\r\n', '\n')
