@@ -10,7 +10,20 @@ from .models import Problem, UserProgress, Submission
 def get_problems(request):
     """
     Returns a list of all problems with their metadata.
-    Optional query parameter 'type' to filter by problem type.
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing:
+            - type (str, optional): Problem type to filter by (default: 'problem_set')
+            
+    Returns:
+        JsonResponse: A JSON response containing a list of problems, where each problem contains:
+            - id (int): Problem ID
+            - name (str): Problem name
+            - language (str): Programming language
+            - difficulty (str): Problem difficulty level
+            - problem_type (str): Type of problem
+            - order (int): Problem order
+            - status (str): Problem status ('completed', 'started', or 'not_started')
     """
     problem_type = request.GET.get('type', 'problem_set')
     problems = Problem.objects.filter(problem_type=problem_type).values(
@@ -54,6 +67,23 @@ def get_problems(request):
 def get_problem_details(request, problem_id):
     """
     Returns full details of a specific problem, including markdown description and test cases.
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing the authenticated user.
+        problem_id (int): The ID of the problem to retrieve details for.
+        
+    Returns:
+        JsonResponse: A JSON response containing:
+            - name (str): Problem name
+            - language (str): Programming language
+            - difficulty (str): Problem difficulty level
+            - problem_type (str): Type of problem
+            - description (str): Problem description in markdown
+            - test_cases (list): List of test cases
+            - is_completed (bool): Whether the user has completed the problem
+            - time_spent (int): Time spent on the problem in seconds
+            - attempts (int): Number of attempts made
+            - order (int): Problem order
     """
     problem = get_object_or_404(Problem, id=problem_id)
     user_progress, _ = UserProgress.objects.get_or_create(
@@ -84,6 +114,19 @@ def get_problem_details(request, problem_id):
 def update_progress(request, problem_id):
     """
     Updates user progress on a problem.
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing:
+            - is_completed (bool): Whether the problem was completed
+            - time_spent (int): Time spent on the problem in seconds
+            - code (str): Code submitted by the user
+            - language (str): Programming language used
+        problem_id (int): The ID of the problem to update progress for.
+        
+    Returns:
+        JsonResponse: A JSON response containing:
+            - message (str): Success message
+            - submission_id (int): ID of the created submission record
     """
     data = json.loads(request.body.decode('utf-8'))
     is_completed = data.get("is_completed", False)
@@ -128,6 +171,14 @@ def update_progress(request, problem_id):
 def get_question_description(request, problem_id):
     """
     Returns the description of a specific problem.
+    
+    Args:
+        request (HttpRequest): The HTTP request object.
+        problem_id (int): The ID of the problem to get the description for.
+        
+    Returns:
+        JsonResponse: A JSON response containing:
+            - description (str): Problem description in markdown
     """
     problem = get_object_or_404(Problem, id=problem_id)
     return JsonResponse({"description": problem.description})
@@ -136,6 +187,14 @@ def get_question_description(request, problem_id):
 def get_question_boilerplate(request, problem_id):
     """
     Returns the boilerplate code for a specific problem.
+    
+    Args:
+        request (HttpRequest): The HTTP request object.
+        problem_id (int): The ID of the problem to get the boilerplate for.
+        
+    Returns:
+        JsonResponse: A JSON response containing:
+            - boilerplate (str): Boilerplate code for the problem
     """
     problem = get_object_or_404(Problem, id=problem_id)
     return JsonResponse({"boilerplate": problem.boilerplate_code})
@@ -145,6 +204,18 @@ def get_question_boilerplate(request, problem_id):
 def get_submissions(request, problem_id):
     """
     Returns all submissions for a specific problem by the current user.
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing the authenticated user.
+        problem_id (int): The ID of the problem to get submissions for.
+        
+    Returns:
+        JsonResponse: A JSON response containing a list of submissions, where each submission contains:
+            - id (int): Submission ID
+            - status (str): Submission status ('completed' or 'attempted')
+            - language (str): Programming language used
+            - created_at (datetime): Submission timestamp
+            - code_submitted (str): Submitted code
     """
     submissions = Submission.objects.filter(
         user=request.user,
@@ -156,6 +227,12 @@ def get_submissions(request, problem_id):
 def get_problem_types(request):
     """
     Returns a list of unique problem types from the database.
+    
+    Args:
+        request (HttpRequest): The HTTP request object.
+        
+    Returns:
+        JsonResponse: A JSON response containing a list of unique problem types (str)
     """
     problem_types = Problem.objects.values_list('problem_type', flat=True).distinct()
     return JsonResponse(list(problem_types), safe=False)
@@ -164,7 +241,19 @@ def get_problem_types(request):
 def get_last_submission(request, problem_id):
     """
     Get the last submission for a specific problem by the current user.
-    Returns the most recent submission regardless of its status (completed or attempted).
+    
+    Args:
+        request (HttpRequest): The HTTP request object containing the authenticated user.
+        problem_id (int): The ID of the problem to get the last submission for.
+        
+    Returns:
+        JsonResponse: A JSON response containing:
+            - On success:
+                - code_submitted (str): Submitted code
+                - status (str): Submission status
+                - created_at (str): ISO formatted submission timestamp
+            - On error:
+                - error (str): Error message
     """
     try:
         # Get the most recent submission for this problem by the current user
