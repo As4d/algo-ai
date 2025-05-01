@@ -13,7 +13,8 @@ const model = ref([
         items: [
             // add items like "problem sets", "learn code basics", etc.
             { label: 'Problem Sets', icon: 'pi pi-fw pi-pencil', to: '/problem-sets' },
-            { label: 'Learn Python Basics', icon: 'pi pi-fw pi-book', to: '/learn-python-basics' }
+            { label: 'Learn Python Basics', icon: 'pi pi-fw pi-book', to: '/learn-python-basics' },
+            { label: 'More Coming Soon', icon: 'pi pi-fw pi-clock' }
         ]
     },
     {
@@ -21,6 +22,15 @@ const model = ref([
         items: [
             { label: 'Your Plans', icon: 'pi pi-fw pi-calendar', to: '/plans' },
             { label: 'Create Plan', icon: 'pi pi-fw pi-plus', to: '/create-plan' }
+        ]
+    },
+    {
+        label: 'More Features Coming Soon',
+        items: [
+            { label: 'Community', icon: 'pi pi-fw pi-users' },
+            { label: 'Submissions', icon: 'pi pi-fw pi-file'},
+
+            { label: 'More Coming Soon', icon: 'pi pi-fw pi-clock' }
         ]
     }
     

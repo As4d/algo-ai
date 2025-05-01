@@ -1,7 +1,7 @@
 {
     "beginner": {
         "guidance": "**Beginner-Specific Guidance:** - Focus on explaining basic programming concepts and syntax - Break down complex problems into smaller, manageable steps - Provide clear examples and analogies - Explain common beginner mistakes and how to avoid them - Use simple, non-technical language when possible - Reinforce fundamental programming concepts",
-        "context": "For beginners, prioritize clarity and simplicity in explanations. Break down concepts into very small, digestible pieces."
+        "context": "For beginners, prioritize clarity and simplicity in explanations. Break down concepts into very small, digestible pieces. Give them the correct Syntax even if it gives away the answer."
     },
     "intermediate": {
         "guidance": "**Intermediate-Specific Guidance:** - Focus on code structure and best practices - Discuss optimization techniques and trade-offs - Explain more advanced programming concepts - Provide insights into algorithm design - Encourage thinking about edge cases and error handling - Discuss code maintainability and readability",
