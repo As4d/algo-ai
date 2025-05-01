@@ -25,8 +25,8 @@ class CreateUserForm(forms.ModelForm):
             # Create a profile for the new user
             Profile.objects.create(
                 user=user,
-                experience_level='beginner',  # Default experience level
-                description='',  # Empty description by default
+                experience_level='beginner',
+                description='',
                 streak=0,
                 high_score_streak=0
             )
