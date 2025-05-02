@@ -84,19 +84,6 @@
                 <p style="color: var(--text-secondary-color); white-space: pre-line;">{{ formatExplanation(plan.ai_explanation) }}</p>
             </div>
 
-            <!-- Topics -->
-            <div class="mb-6">
-                <h2 class="text-lg font-semibold mb-2" style="color: var(--text-color)">Topics</h2>
-                <div class="flex flex-wrap gap-2">
-                    <Chip 
-                        v-for="topic in plan.topics" 
-                        :key="topic"
-                        :label="formatTopic(topic)"
-                        class="capitalize custom-chip"
-                    />
-                </div>
-            </div>
-
             <!-- Problems List -->
             <div>
                 <h2 class="text-lg font-semibold mb-4" style="color: var(--text-color)">Problems</h2>

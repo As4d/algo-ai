@@ -66,12 +66,12 @@
                             <p class="capitalize">{{ plan.difficulty }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-600">Topics</p>
+                            <p class="text-sm text-gray-600">Problem Types</p>
                             <div class="flex flex-wrap gap-2 mt-1">
                                 <Chip 
-                                    v-for="topic in plan.topics" 
-                                    :key="topic"
-                                    :label="formatTopic(topic)"
+                                    v-for="type in plan.problem_types" 
+                                    :key="type"
+                                    :label="formatProblemType(type)"
                                     class="capitalize"
                                 />
                             </div>
