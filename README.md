@@ -1,7 +1,5 @@
 # Algo-AI: Algorithm Learning Platform
 
-A comprehensive platform for learning algorithms and programming concepts, featuring AI-assisted learning, code execution, and gamification elements.
-
 ## Tech Stack
 
 ### Backend
@@ -100,7 +98,7 @@ A comprehensive platform for learning algorithms and programming concepts, featu
 #### Using Miniconda (Recommended)
 
 1. **Install Miniconda**
-   - Download Miniconda from [https://docs.conda.io/en/latest/miniconda.html](https://docs.conda.io/en/latest/miniconda.html)
+   - Download [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
    - Follow the installation instructions for your operating system
    - Verify installation:
      ```bash
@@ -168,7 +166,7 @@ A comprehensive platform for learning algorithms and programming concepts, featu
 
 ### Frontend Setup
 1. **Install Node.js and npm**
-   - Download and install Node.js from [https://nodejs.org/](https://nodejs.org/)
+   - Download and install [Node.js](https://nodejs.org/)
    - Verify installation:
      ```bash
      node --version
@@ -277,5 +275,5 @@ All core functionality, architecture, and implementation decisions were made and
 
 ## Acknowledgments
 
-- Fredrik Dahlqvist (Project Supervisor)
-- Claire Revell (Module Organiser)
+- Fredrik Dahlqvist
+- Claire Revell
