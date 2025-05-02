@@ -1,7 +1,5 @@
 # Algo-AI: Algorithm Learning Platform
 
-A comprehensive platform for learning algorithms and programming concepts, featuring AI-assisted learning, code execution, and gamification elements.
-
 ## Tech Stack
 
 ### Backend
@@ -100,7 +98,7 @@ A comprehensive platform for learning algorithms and programming concepts, featu
 #### Using Miniconda (Recommended)
 
 1. **Install Miniconda**
-   - Download Miniconda from [https://docs.conda.io/en/latest/miniconda.html](https://docs.conda.io/en/latest/miniconda.html)
+   - Download [Miniconda](https://docs.conda.io/en/latest/miniconda.html)
    - Follow the installation instructions for your operating system
    - Verify installation:
      ```bash
