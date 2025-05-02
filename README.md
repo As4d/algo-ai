@@ -166,7 +166,7 @@
 
 ### Frontend Setup
 1. **Install Node.js and npm**
-   - Download and install Node.js from [https://nodejs.org/](https://nodejs.org/)
+   - Download and install [Node.js](https://nodejs.org/)
    - Verify installation:
      ```bash
      node --version
