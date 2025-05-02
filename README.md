@@ -275,5 +275,5 @@ All core functionality, architecture, and implementation decisions were made and
 
 ## Acknowledgments
 
-- Fredrik Dahlqvist (Project Supervisor)
-- Claire Revell (Module Organiser)
+- Fredrik Dahlqvist
+- Claire Revell
