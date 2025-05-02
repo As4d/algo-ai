@@ -83,8 +83,19 @@ A comprehensive platform for learning algorithms and programming concepts, featu
 - Node.js 16+
 - npm or yarn
 - Miniconda (recommended) or Anaconda
+- OpenRouter API key (free)
 
 ### Environment Setup
+
+#### Getting an OpenRouter API Key
+1. Visit [OpenRouter](https://openrouter.ai/) and sign up for a free account
+2. Navigate to your [API Keys](https://openrouter.ai/keys) page
+3. Create a new API key
+4. The free tier includes access to DeepSeek R1 model with generous usage limits
+5. Add your API key to the `.env` file:
+   ```
+   OPENROUTER_API_KEY=your_api_key_here
+   ```
 
 #### Using Miniconda (Recommended)
 
@@ -137,12 +148,20 @@ A comprehensive platform for learning algorithms and programming concepts, featu
    - Create a `.env` file in the root directory
    - Add required environment variables (refer to `.env.example`)
 
-2. Run migrations:
+2. **Database Setup**
+   - For development and testing, you can use the pre-populated mock database:
+     ```bash
+     # Copy the mock database to the project root
+     cp mock_db/db.sqlite3 .
+     ```
+   The mock database includes sample algorithm problems with test cases
+
+3. Run migrations:
    ```bash
    python manage.py migrate
    ```
 
-3. Start the development server:
+4. Start the development server:
    ```bash
    python manage.py runserver
    ```
@@ -185,6 +204,30 @@ A comprehensive platform for learning algorithms and programming concepts, featu
    # Create production build
    npm run build
    ```
+
+## Development with Mock Database
+
+The project includes a `mock_db` directory containing a pre-populated SQLite database for testing and development. This database includes a collection of sample algorithm problems with their corresponding test cases.
+
+### Using the Mock Database
+1. **Initial Setup**
+   ```bash
+   # Copy the mock database to your project root
+   cp mock_db/db.sqlite3 .
+   ```
+
+2. **Development Workflow**
+   - Use the mock database to test problem-related features
+   - Experiment with different problem types and test cases
+   - The problems cover various difficulty levels and algorithmic concepts
+
+3. **Resetting the Database**
+   ```bash
+   # To reset to the original mock database
+   cp mock_db/db.sqlite3 .
+   ```
+
+Note: The mock database is for development purposes only. For production, you should set up a proper database and configure it according to your needs.
 
 ## Open Source Components
 
