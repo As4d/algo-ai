@@ -86,7 +86,7 @@
 ### Environment Setup
 
 #### Getting an OpenRouter API Key
-1. Visit [OpenRouter](https://openrouter.ai/) and sign up for a free account
+1. Visit [OpenRouter](https://openrouter.ai/deepseek/deepseek-r1:free) and sign up for a free account
 2. Navigate to your [API Keys](https://openrouter.ai/keys) page
 3. Create a new API key
 4. The free tier includes access to DeepSeek R1 model with generous usage limits
