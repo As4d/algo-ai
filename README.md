@@ -131,8 +131,27 @@
 
 ### Backend Setup
 1. Set up environment variables:
-   - Create a `.env` file in the root directory
+   - Create a `.env` file in your backend root directory with the following content:
    - Add required environment variables (refer to `.env.example`)
+
+```env
+DJANGO_SECRET_KEY="your_secret_key_here"
+
+# Set to True
+DJANGO_DEBUG=True
+
+# Required for AI assistant (see steps above to obtain)
+OPENROUTER_API_KEY="your_openrouter_api_key_here"
+```
+
+#### Notes:
+
+* You can generate a `DJANGO_SECRET_KEY` for development using this Python snippet:
+
+  ```bash
+  python -c 'from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())'
+  ```
+
 
 2. **Database Setup**
    - For development and testing, you can use the pre-populated mock database:
@@ -153,6 +172,10 @@
    ```
 
 ### Frontend Setup
+
+### Note
+You may need to run `conda activate algoai_env` again as its a different terminal
+
 1. **Install Node.js and npm**
    - Download and install [Node.js](https://nodejs.org/)
    - Verify installation:
@@ -170,26 +193,12 @@
    npm install
    ```
 
-3. **Environment Configuration**
-   - Create a `.env` file in the frontend directory
-   - Add required environment variables:
-     ```
-     VITE_API_URL=http://localhost:8000
-     VITE_WS_URL=ws://localhost:8000
-     ```
-
-4. **Start Development Server**
+3. **Start Development Server**
    ```bash
    # Start the Vite development server
    npm run dev
    ```
    The frontend will be available at `http://localhost:5173`
-
-5. **Build for Production**
-   ```bash
-   # Create production build
-   npm run build
-   ```
 
 ## Development with Mock Database
 
@@ -213,7 +222,7 @@ The project includes a `mock_db` directory containing a pre-populated SQLite dat
    cp mock_db/db.sqlite3 .
    ```
 
-Note: The mock database is for development purposes only. For production, you should set up a proper database and configure it according to your needs.
+Note: The mock database is for development purposes only.
 
 ## Open Source Components
 
@@ -253,7 +262,7 @@ Note: The mock database is for development purposes only. For production, you sh
 
 ## AI-Assisted Development
 
-This project has utilized Large Language Models (LLMs) for assistance in the following areas:
+This project has utilised Large Language Models (LLMs) for assistance in the following areas:
 - Documentation (docstrings, module strings)
 - Commit message generation
 - Minor code improvements (error handling, logging, regular expressions)
