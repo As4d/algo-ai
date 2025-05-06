@@ -105,28 +105,16 @@
      conda --version
      ```
 
-2. **Create and Activate Environment**
+2. **Import Environment**
    ```bash
-   # Create a new environment
-   conda create -n algo-ai python=3.8
-   
-   # Activate the environment
-   conda activate algo-ai
-   ```
-
-3. **Export Current Environment (if you have a working environment)**
-   ```bash
-   # Export the environment to a YAML file
-   conda env export > environment.yml
-   ```
-
-4. **Import Environment (for new users)**
-   ```bash
+   # List conda enviroments to see what theyre called
+   conda env list
+      
    # Create environment from YAML file
    conda env create -f environment.yml
    
    # Activate the environment
-   conda activate algo-ai
+   conda activate algoai_env
    ```
 
 #### Using Virtual Environment (Alternative)
